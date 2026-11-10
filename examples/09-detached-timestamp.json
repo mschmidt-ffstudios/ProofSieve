@@ -1,0 +1,124 @@
+{
+  "id": "09-detached-timestamp",
+  "title": "Require a trusted detached timestamp bound to the exact artifact",
+  "appliesTo": {
+    "format": "rfc3161",
+    "type": "detached-timestamp"
+  },
+  "checks": [
+    {
+      "id": "timestamp-token",
+      "kind": "rfc3161-token-verification",
+      "fact": "uv:timestampTokenVerified",
+      "configuration": {
+        "trustProfile": "https://proofsieve.example/trust/timestamp-authorities",
+        "requireCmsSignature": true,
+        "requireSignerCertificateBinding": true,
+        "requireTrustedTsaPathAndRevocationEvidence": true,
+        "requireCriticalTimestampingOnlyEku": true,
+        "validationTime": "signed genTime"
+      }
+    },
+    {
+      "id": "artifact-imprint",
+      "kind": "rfc3161-message-imprint",
+      "fact": "uv:artifactImprintMatches",
+      "configuration": {
+        "digestInput": "exact artifact bytes",
+        "algorithmSource": "signed TSTInfo messageImprint hashAlgorithm",
+        "allowedAlgorithms": [
+          "SHA-256",
+          "SHA-384",
+          "SHA-512"
+        ],
+        "requireDigestLengthMatch": true,
+        "compareTo": "signed TSTInfo messageImprint hashedMessage"
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/09-detached-timestamp",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/timestamped-artifact",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:timestampTokenVerified",
+            "operator": "eq",
+            "rightOperand": true
+          },
+          {
+            "leftOperand": "uv:artifactImprintMatches",
+            "operator": "eq",
+            "rightOperand": true
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "boolean"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:timestampTokenVerified": true,
+        "uv:artifactImprintMatches": true
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": false
+      },
+      "reason": "The trusted token binds the exact artifact bytes to genTime. Seal qualification is a separate assessment."
+    },
+    {
+      "id": "deny-different-artifact",
+      "facts": {
+        "uv:timestampTokenVerified": true,
+        "uv:artifactImprintMatches": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "A trusted token covers a different digest, so the supplied artifact fails the binding check."
+    },
+    {
+      "id": "deny-untrusted-tsa",
+      "facts": {
+        "uv:timestampTokenVerified": false,
+        "uv:artifactImprintMatches": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "A matching digest is insufficient when the timestamp authority fails the trust check."
+    },
+    {
+      "id": "deny-missing-artifact",
+      "facts": {
+        "uv:timestampTokenVerified": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The token was verified, but the original artifact bytes are unavailable for the imprint comparison."
+    }
+  ],
+  "sources": [
+    "https://datatracker.ietf.org/doc/html/rfc3161",
+    "https://datatracker.ietf.org/doc/html/rfc5816"
+  ]
+}

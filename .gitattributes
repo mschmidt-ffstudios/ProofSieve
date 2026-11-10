@@ -1,0 +1,3 @@
+# Defense in depth for source archives. Private files must stay out of Git.
+/internal export-ignore
+/instance export-ignore

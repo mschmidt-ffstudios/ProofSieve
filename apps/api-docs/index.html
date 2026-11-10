@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de" data-en-title="ProofSieve · API Explorer">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProofSieve · API-Konsole</title>
+  <link rel="stylesheet" href="../workspace.css">
+  <link rel="stylesheet" href="../shared/language.css">
+  <link rel="stylesheet" href="./vendor/swagger-ui.css">
+  <link rel="stylesheet" href="./api-docs.css">
+  <script defer src="./vendor/swagger-ui-bundle.js"></script>
+  <script type="module" src="./api-docs.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/apps/">ProofSieve</a>
+      <nav class="top-actions" aria-label="Anwendungen" data-en-aria-label="Applications">
+        <a class="api-link" href="/apps/" data-en="Overview">Übersicht</a>
+        <a class="api-link" href="/apps/guard/">Guard</a>
+        <a class="api-link" href="/apps/builder/">Credential Builder</a>
+        <a class="api-link" href="/apps/lab/" data-en="Verification Lab">Prüflabor</a>
+        <a class="api-link" href="/apps/api-docs/" aria-current="page">Swagger UI</a>
+        <select data-language aria-label="Sprache / Language"><option value="de">Deutsch</option><option value="en">English</option></select>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="intro">
+      <h1 data-en="Explore the verification API">Prüf-API ausprobieren</h1>
+      <p data-en="Open a permitted endpoint to inspect its request and run a test against this instance.">Öffne einen freigegebenen Endpunkt, sieh dir das Anfrageformat an und teste ihn an dieser Instanz.</p>
+    </div>
+    <form id="api-login" class="api-panel" autocomplete="off" hidden>
+      <label for="api-token" data-en="Access token">Zugriffstoken</label>
+      <div class="api-controls">
+        <input id="api-token" type="password" maxlength="12281" required autocomplete="off" spellcheck="false" autocapitalize="off">
+        <button id="api-sign-in" type="submit" data-en="Load permitted endpoints">Freigegebene Endpunkte laden</button>
+      </div>
+      <p data-en="Use an opaque operator token or a Keycloak service access token. The console keeps the token in this page for requests.">Verwende einen ProofSieve-Token oder einen Keycloak-Service-Token. Die Konsole hält ihn für Anfragen im Speicher dieser Seite.</p>
+    </form>
+    <p id="api-status" role="status" aria-live="polite"></p>
+    <div id="api-actions" class="api-controls" hidden>
+      <button id="api-download" type="button" data-en="Download OpenAPI JSON">OpenAPI-JSON herunterladen</button>
+      <button id="api-sign-out" type="button" data-en="Clear token">Token entfernen</button>
+    </div>
+    <p id="api-curl-auth" hidden>
+      <span data-en="For a copied cURL command, add this header and set the token in your shell.">Ergänze beim Kopieren eines cURL-Befehls diesen Header und setze den Token in deiner Shell.</span>
+      <code>-H "Authorization: Bearer $PROOFSIEVE_TOKEN"</code>
+    </p>
+    <section id="api-explorer" aria-label="Swagger UI"></section>
+  </main>
+</body>
+</html>

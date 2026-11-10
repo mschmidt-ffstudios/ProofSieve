@@ -1,0 +1,100 @@
+{
+  "id": "04-jsonld-context",
+  "title": "JSON-LD credential with a pinned semantic context",
+  "appliesTo": {
+    "format": "application/vc",
+    "type": "https://www.w3.org/2018/credentials#VerifiableCredential",
+    "proofSuite": "eddsa-rdfc-2022"
+  },
+  "checks": [
+    {
+      "id": "approved-context-sequence",
+      "kind": "jsonld-context-allowlist",
+      "fact": "uv:jsonldContextSequenceApproved",
+      "configuration": {
+        "requiredOrderedContexts": ["https://www.w3.org/ns/credentials/v2", "https://proofsieve.example/contexts/membership/v1"],
+        "allowExtraContexts": false,
+        "allowInlineContexts": false,
+        "checkNestedContexts": true
+      }
+    },
+    {
+      "id": "pinned-context-loader",
+      "kind": "jsonld-context-integrity",
+      "fact": "uv:jsonldContextPinsMatch",
+      "configuration": {
+        "documentLoader": "local-pinned-catalog",
+        "pinAlgorithm": "sha-256",
+        "allowNetworkFallback": false,
+        "checkTransitiveContexts": true
+      }
+    },
+    {
+      "id": "expanded-membership-type",
+      "kind": "jsonld-expanded-type",
+      "fact": "uv:expandedCredentialType",
+      "configuration": {
+        "extract": "expanded-credential-type-for-profile",
+        "compareBy": "absolute-iri"
+      }
+    },
+    {
+      "id": "data-integrity-proof",
+      "kind": "data-integrity-verification",
+      "fact": "uv:jsonldCredentialProofVerified",
+      "configuration": {
+        "proofSuite": "eddsa-rdfc-2022",
+        "proofPurpose": "assertionMethod",
+        "documentLoader": "local-pinned-catalog"
+      }
+    }
+  ],
+  "odrl": {
+    "@context": ["http://www.w3.org/ns/odrl.jsonld", {"uv": "https://proofsieve.example/vocab/"}],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/04-jsonld-context",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [{
+      "target": "https://proofsieve.example/resources/semantic-credential-intake",
+      "action": "uv:approve",
+      "constraint": [
+        {"leftOperand": "uv:jsonldContextSequenceApproved", "operator": "eq", "rightOperand": true},
+        {"leftOperand": "uv:jsonldContextPinsMatch", "operator": "eq", "rightOperand": true},
+        {"leftOperand": "uv:expandedCredentialType", "operator": "eq", "rightOperand": "https://proofsieve.example/vocab/MemberCredential"},
+        {"leftOperand": "uv:jsonldCredentialProofVerified", "operator": "eq", "rightOperand": true}
+      ]
+    }]
+  },
+  "output": {"mode": "boolean"},
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {"uv:jsonldContextSequenceApproved": true, "uv:jsonldContextPinsMatch": true, "uv:expandedCredentialType": "https://proofsieve.example/vocab/MemberCredential", "uv:jsonldCredentialProofVerified": true},
+      "expected": {"valid": true, "forwarded": false},
+      "reason": "The declared contexts, pinned documents, expanded credential type and proof all match."
+    },
+    {
+      "id": "deny-unapproved-context",
+      "facts": {"uv:jsonldContextSequenceApproved": false},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "An extra context was declared. The restricted loader stops before expansion."
+    },
+    {
+      "id": "deny-context-pin-mismatch",
+      "facts": {"uv:jsonldContextSequenceApproved": true, "uv:jsonldContextPinsMatch": false},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "The declared context IRIs are approved, but a local context document failed its digest pin."
+    },
+    {
+      "id": "deny-wrong-expanded-type",
+      "facts": {"uv:jsonldContextSequenceApproved": true, "uv:jsonldContextPinsMatch": true, "uv:expandedCredentialType": "https://proofsieve.example/vocab/GuestCredential", "uv:jsonldCredentialProofVerified": true},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "The verified credential expands to GuestCredential, outside this intake profile."
+    }
+  ],
+  "sources": [
+    "https://www.w3.org/TR/json-ld11/",
+    "https://www.w3.org/TR/vc-data-model-2.0/",
+    "https://www.w3.org/TR/vc-di-eddsa/"
+  ]
+}

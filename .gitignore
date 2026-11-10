@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+/build/
+/dist/
+/release-artifacts/
+*.egg-info/
+
+# Private deployment and runtime state belong to each installation.
+/internal/
+/instance/
+.env
+.env.*
+*.env
+.envrc
+!.env.example
+!.env.*.example
+
+# Keep signing keys and credential stores out of the public tree.
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+!*.public.pem
+!*.cert.pem

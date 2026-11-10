@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="de" data-en-title="ProofSieve · Guard">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProofSieve · Guard</title>
+  <link rel="stylesheet" href="../shared/form.css">
+  <link rel="stylesheet" href="../shared/language.css">
+  <link rel="stylesheet" href="./guard.css">
+  <link rel="stylesheet" href="./odrl-graph.css">
+  <link rel="stylesheet" href="./rule-tester.css">
+  <link rel="stylesheet" href="./access.css">
+  <script type="module" src="./guard.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/apps/">ProofSieve</a>
+    <nav aria-label="Anwendungen" data-en-aria-label="Applications">
+      <a href="/apps/" data-en="Overview">Übersicht</a>
+      <a href="/apps/guard/" aria-current="page">Guard</a>
+      <a href="/apps/builder/">Credential Builder</a>
+      <a href="/apps/lab/" data-en="Verification Lab">Prüflabor</a>
+      <a href="/apps/api-docs/">Swagger UI</a>
+      <a id="guard-openapi" href="/openapi.json">OpenAPI</a>
+      <select data-language aria-label="Sprache / Language"><option value="de">Deutsch</option><option value="en">English</option></select>
+    </nav>
+  </header>
+  <main>
+    <section id="guard-access"></section>
+    <div id="guard-editor" hidden>
+    <div class="intro">
+      <div>
+        <p class="eyebrow" data-en="Local runtime">Lokale Laufzeit</p>
+        <h1 id="guard-editor-heading" tabindex="-1" data-en="Set a rule. Verify an input.">Regel setzen. Eingabe prüfen.</h1>
+        <p data-en="The Guard checks the input on the server and returns the decision using the selected response mode.">Der Guard prüft die Eingabe am Server und gibt die Entscheidung mit dem eingestellten Ausgang zurück.</p>
+      </div>
+      <code id="guard-endpoint-badge" class="endpoint">POST /verify</code>
+    </div>
+    <p id="guard-status" class="status" role="status" data-state="info">Regel wird geladen …</p>
+    <div class="work">
+      <section class="panel" aria-labelledby="policy-heading">
+        <header class="policy-header">
+          <span class="step">01</span><h2 id="policy-heading" data-en="Active rule">Aktive Regel</h2>
+          <button id="guard-test-rule" type="button" aria-haspopup="dialog" aria-controls="guard-tester" data-en="Test rule" disabled>Regel testen</button>
+        </header>
+        <div class="panel-body">
+          <label><span data-en="Endpoint">Endpunkt</span>
+            <select id="guard-endpoint-picker"><option value="/verify">/verify</option><option value="__new__" data-en="+ Create an endpoint">+ Neuen Endpunkt anlegen</option></select>
+          </label>
+          <p id="guard-read-only" class="muted" data-en="This demo endpoint has a fixed rule. You can change its verification input." hidden>Die Regel dieses Demo-Endpunkts ist fest. Den Prüfinput kannst du ändern.</p>
+          <label id="guard-endpoint-field" hidden><span data-en="Path for the new endpoint">Pfad für den neuen Endpunkt</span>
+            <input id="guard-endpoint" type="text" placeholder="/verify/konto" data-en-placeholder="/verify/account" autocomplete="off" spellcheck="false">
+          </label>
+          <div class="form-row">
+            <label><span data-en="Rule language">Regelsprache</span>
+              <select id="guard-language"><option value="odrl">ODRL · JSON-LD</option><option value="shacl">SHACL · Turtle</option></select>
+            </label>
+            <label><span data-en="Response mode">Antwortmodus</span>
+              <select id="guard-mode">
+                <option value="boolean" data-en="Boolean · true or false">Boolesch · true oder false</option>
+                <option value="guard" data-en="Guard · HTTP 403 on refusal">Guard · HTTP 403 bei Ablehnung</option>
+                <option value="url" data-en="Return a URL as JSON">URL als JSON zurückgeben</option>
+                <option value="decision" data-en="Decision · auditable operation" hidden>Entscheidung · mit Prüfvermerk</option>
+              </select>
+            </label>
+          </div>
+          <details id="guard-document-profile" class="rule-code" hidden>
+            <summary data-en="Document signature profile">Prüfprofil für Dokumentsignaturen</summary>
+            <p id="guard-profile-summary" class="muted"></p>
+            <ul id="guard-profile-signers" class="credential-flow" aria-label="Signierer und Prüfwege" data-en-aria-label="Signers and verification paths"></ul>
+            <label><span data-en="Verification profile (JSON)">Prüfprofil (JSON)</span>
+              <textarea id="guard-verification" rows="8" spellcheck="false" autocomplete="off" maxlength="98304" aria-describedby="guard-profile-help"></textarea>
+            </label>
+            <p id="guard-profile-help" class="muted"></p>
+          </details>
+          <section id="guard-graph" aria-label="ODRL-Regelgraph" data-en-aria-label="ODRL policy graph" hidden></section>
+          <details id="guard-raw" class="rule-code">
+            <summary id="guard-raw-title">ODRL-JSON-LD anzeigen und bearbeiten</summary>
+            <label><span data-en="Rule text">Regeltext</span><textarea id="guard-policy" spellcheck="false" rows="13" aria-describedby="guard-policy-help"></textarea></label>
+            <p id="guard-policy-help" class="muted" data-en="The server validates and saves this rule text.">Hier steht der Regeltext, den der Server prüft und speichert.</p>
+          </details>
+          <fieldset id="guard-urls" class="rule-outputs" hidden>
+            <legend data-en="Verification outcome">Ausgang der Prüfung</legend>
+            <label><span><span class="branch allow" data-en="Allow">Freigabe</span> Return URL</span>
+              <input id="guard-return-url" type="url" placeholder="https://portal.example/weiter" data-en-placeholder="https://portal.example/continue" autocomplete="off" spellcheck="false">
+            </label>
+            <label><span><span class="branch deny" data-en="Deny">Ablehnung</span> Fail URL</span>
+              <input id="guard-fail-url" type="url" placeholder="https://portal.example/abgelehnt" data-en-placeholder="https://portal.example/refused" autocomplete="off" spellcheck="false">
+            </label>
+            <p class="muted" data-en="Enter at least one HTTPS destination. When an outcome has no URL, the API returns only the decision.">Mindestens ein HTTPS-Ziel eintragen. Für einen leeren Ausgang liefert die API nur die Entscheidung.</p>
+          </fieldset>
+          <div id="guard-edit-actions" class="actions">
+            <button id="guard-load-template" type="button" data-en="Load template">Vorlage laden</button>
+            <button id="guard-nested-template" type="button" data-en="Load nested example">Verschachteltes Beispiel laden</button>
+            <button id="guard-save" type="button" class="primary" data-en="Save rule" disabled>Regel speichern</button>
+            <button id="guard-reload-rule" type="button" data-en="Load the current rule" hidden>Aktuelle Regel laden</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="test-heading">
+        <header><span class="step">02</span><h2 id="test-heading" data-en="Verify a request">Anfrage prüfen</h2></header>
+        <div class="panel-body">
+          <div class="handoff" id="guard-handoff" hidden>
+            <p id="guard-handoff-message" class="muted" role="status"></p>
+            <button id="guard-handoff-discard" type="button" data-en="Discard">Verwerfen</button>
+          </div>
+          <div id="guard-credential" class="credential" hidden>
+            <div class="credential-heading">
+              <strong id="guard-credential-format"></strong>
+              <span class="credential-badge" data-en="Issuer proof">Aussteller-Nachweis</span>
+            </div>
+            <p id="guard-credential-description" class="muted"></p>
+            <ol class="credential-flow" aria-label="Prüfablauf" data-en-aria-label="Verification flow">
+              <li data-step="signature"><span data-en="Verify issuer signature">Aussteller-Signatur prüfen</span><strong></strong></li>
+              <li data-step="claims"><span data-en="Authenticate disclosed claims">Offengelegte Claims absichern</span><strong></strong></li>
+              <li data-step="policy"><span data-en="Evaluate ODRL policy">ODRL-Regel auswerten</span><strong></strong></li>
+            </ol>
+            <div id="guard-credential-examples" class="actions" hidden>
+              <button id="guard-example-valid" type="button" data-en="Load signed original">Signiertes Original laden</button>
+              <button id="guard-example-tampered" type="button" data-en="Load tampered case">Manipulierten Fall laden</button>
+            </div>
+          </div>
+          <label id="guard-operation-field" hidden><span data-en="Operation reference">Vorgangsreferenz</span>
+            <input id="guard-operation" type="text" maxlength="128" autocomplete="off" spellcheck="false" placeholder="order-1042" aria-describedby="guard-operation-help">
+            <span id="guard-operation-help" class="muted" data-en="The decision and its evidence refer to this operation.">Die Entscheidung und ihr Prüfvermerk beziehen sich auf diesen Vorgang.</span>
+          </label>
+          <label><span id="guard-input-caption">Prüfinput</span><textarea id="guard-data" spellcheck="false" rows="8" aria-describedby="guard-input-help"></textarea></label>
+          <p class="muted" id="guard-input-help" data-en="ODRL reads a JSON object. SHACL validates an RDF graph written in Turtle.">ODRL liest ein JSON-Objekt. SHACL prüft einen RDF-Graphen als Turtle.</p>
+          <div class="actions"><button id="guard-verify" type="button" class="primary" data-en="Verify on server" disabled>Am Server prüfen</button></div>
+          <div class="result" aria-live="polite">
+            <div class="result-title"><strong><span data-en="Response from">Antwort von</span> <code id="guard-result-endpoint">/verify</code></strong><span id="guard-http-status"></span></div>
+            <pre id="guard-response"></pre>
+            <p id="guard-wallet-expiry" class="muted result-detail" hidden><span data-en="Session expires at">Sitzung gültig bis</span> <time></time></p>
+            <button id="guard-evidence" class="result-detail" type="button" data-en="Download signed evidence" hidden>Signierte Evidenz herunterladen</button>
+            <p id="guard-evidence-status" class="muted result-detail" role="status" hidden></p>
+            <a id="guard-response-link" class="response-link" target="_blank" rel="noopener noreferrer" data-en="Open destination" hidden>Ziel öffnen</a>
+          </div>
+        </div>
+      </section>
+    </div>
+    </div>
+  </main>
+  <dialog id="guard-tester"></dialog>
+</body>
+</html>

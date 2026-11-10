@@ -1,0 +1,37 @@
+@startuml
+title ProofSieve · How to use the application
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontColor #15283F
+skinparam defaultFontName SansSerif
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam ArrowColor #526B8A
+skinparam RectangleBorderColor #8CA6C9
+skinparam RectangleBackgroundColor #EDF4FC
+skinparam nodesep 27
+skinparam ranksep 34
+
+rectangle "**ProofSieve**\nWhat do you want to do?" as Start #DFECFC
+
+together {
+    rectangle "**01  Configure a rule**\nAdmin · Guard\nChoose a /verify path, edit and test\nan ODRL or SHACL draft, then save" as Author
+    rectangle "**02  Test an input**\nVerifier · Builder and Guard\nPrepare or load data, choose a compatible\nendpoint and run the check" as Test
+    rectangle "**03  Integrate a service**\nClient · Swagger and API\nDiscover allowed paths and call\na saved /verify endpoint" as Integrate
+    rectangle "**Explore worked examples**\nVerification Lab\nTry synthetic cases and export\nthe edited example" as Lab #F4F5F7
+}
+
+rectangle "**Saved endpoint**\nChecks the input and applies the configured rule" as Check #DFECFC
+rectangle "**04  Deliver an approved request**\nForwarding-enabled decision endpoints\nSend the original body to a fixed HTTPS receiver\nand report the delivery state" as Forward #E3F4EC
+rectangle "**Return the configured result**\nBoolean, Guard status, URL in JSON\nor recorded decision with any delivery state" as Respond
+
+Start -down-> Author
+Start -down-> Test
+Start -down-> Integrate
+Start -down-> Lab
+Author -[dashed]down-> Check : saved rule
+Test -down-> Check
+Integrate -down-> Check
+Check -down-> Forward : approval + forwarding configured
+Check -down-> Respond : other outcomes
+Forward -down-> Respond
+@enduml

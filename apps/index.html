@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de" data-en-title="ProofSieve · Workspace">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>ProofSieve · Arbeitsbereich</title>
+  <link rel="stylesheet" href="./workspace.css">
+  <link rel="stylesheet" href="./shared/language.css">
+  <script type="module" src="./shared/i18n.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/apps/">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.5 20 6v5.3c0 4.7-2.7 8-8 10.2-5.3-2.2-8-5.5-8-10.2V6l8-3.5Z"></path>
+            <path d="m8.8 12 2.2 2.2 4.4-4.4"></path>
+          </svg>
+        </span>
+        ProofSieve
+      </a>
+      <nav class="top-actions" aria-label="Anwendungen" data-en-aria-label="Applications">
+        <a class="api-link" href="/apps/" aria-current="page" data-en="Overview">Übersicht</a>
+        <a class="api-link" href="/apps/guard/">Guard</a>
+        <a class="api-link" href="/apps/builder/">Credential Builder</a>
+        <a class="api-link" href="/apps/lab/" data-en="Verification Lab">Prüflabor</a>
+        <a class="api-link" href="/apps/api-docs/">Swagger UI</a>
+        <select data-language aria-label="Sprache / Language"><option value="de">Deutsch</option><option value="en">English</option></select>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="intro">
+      <p class="local-label"><span aria-hidden="true"></span><span data-en="Local workspace">Lokale Umgebung</span></p>
+      <h1 data-en="ProofSieve Workspace">ProofSieve Arbeitsbereich</h1>
+      <p data-en="Apply rules, prepare test data and explore verification paths.">Regeln anwenden, Testdaten vorbereiten und Prüfpfade nachvollziehen.</p>
+    </div>
+
+    <section class="apps" aria-label="ProofSieve-Anwendungen" data-en-aria-label="ProofSieve apps">
+      <article class="app-card guard">
+        <div class="card-top">
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 20 6.5v4.9c0 4.4-2.7 7.5-8 9.6-5.3-2.1-8-5.2-8-9.6V6.5L12 3Z"></path>
+              <path d="m8.8 12 2.2 2.2 4.4-4.4"></path>
+            </svg>
+          </span>
+          <span class="badge" data-en="Server verification">Serverprüfung</span>
+        </div>
+        <h2>Guard</h2>
+        <p data-en="Save ODRL and SHACL rules and verify input against the active rule at a local endpoint.">ODRL- und SHACL-Regeln speichern und Eingaben an einem lokalen Prüfendpunkt gegen die aktive Regel prüfen.</p>
+        <a class="action primary" href="/apps/guard/"><span data-en="Open Guard">Guard öffnen</span> <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article class="app-card">
+        <div class="card-top">
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 4H6a2 2 0 0 0-2 2v2m12-4h2a2 2 0 0 1 2 2v2M4 16v2a2 2 0 0 0 2 2h2m8 0h2a2 2 0 0 0 2-2v-2M12 8v8m-4-4h8"></path>
+            </svg>
+          </span>
+          <span class="badge" data-en="Unsigned test data">Unsignierte Testdaten</span>
+        </div>
+        <h2>Credential Builder</h2>
+        <p data-en="Create sample data, edit its values and pass the result to the Guard for verification.">Beispieldaten erstellen, Werte bearbeiten und die fertige Eingabe für eine Prüfung an den Guard übergeben.</p>
+        <a class="action" href="/apps/builder/"><span data-en="Open Credential Builder">Credential Builder öffnen</span> <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article class="app-card">
+        <div class="card-top">
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8.5" y="3" width="7" height="5" rx="1"></rect>
+              <rect x="2.5" y="16" width="7" height="5" rx="1"></rect>
+              <rect x="14.5" y="16" width="7" height="5" rx="1"></rect>
+              <path d="M12 8v4m-6 4v-4h12v4"></path>
+            </svg>
+          </span>
+          <span class="badge" data-en="Synthetic examples">Synthetische Beispiele</span>
+        </div>
+        <h2 data-en="Verification Lab">Prüflabor</h2>
+        <p data-en="Run ten examples, follow their ODRL rules in the graph and compare the simulated outcomes.">Zehn Beispiele durchspielen, ODRL-Regeln im Prüfgraphen verfolgen und die simulierten Ergebnisse vergleichen.</p>
+        <a class="action" href="/apps/lab/"><span data-en="Open Verification Lab">Prüflabor öffnen</span> <span aria-hidden="true">→</span></a>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{
+  "id": "03-wallet-presentation",
+  "title": "Wallet presentation bound to a fresh verifier session",
+  "appliesTo": {
+    "format": "mso_mdoc",
+    "type": "org.iso.18013.5.1.mDL",
+    "transport": "OpenID4VP"
+  },
+  "checks": [
+    {
+      "id": "mobile-document-proof",
+      "kind": "presentation-verification",
+      "fact": "uv:walletPresentationVerified",
+      "configuration": {
+        "requiredChecks": ["issuer-authentication", "trusted-issuer-for-doc-type", "data-element-digests", "validity-period", "device-authentication"]
+      }
+    },
+    {
+      "id": "verifier-session-binding",
+      "kind": "presentation-session-binding",
+      "fact": "uv:walletSessionBound",
+      "configuration": {
+        "protocol": "OpenID4VP 1.0",
+        "bindThrough": "mdoc-session-transcript",
+        "verifyAgainst": ["server-issued-nonce", "configured-verifier-client-id"],
+        "sessionSource": "server-session-store"
+      }
+    },
+    {
+      "id": "fresh-session",
+      "kind": "session-age",
+      "fact": "uv:walletSessionAgeSeconds",
+      "configuration": {
+        "clock": "verifier",
+        "referenceTime": "session-issued-at",
+        "rejectFutureReferenceTime": true
+      }
+    },
+    {
+      "id": "single-use-session",
+      "kind": "session-replay-check",
+      "fact": "uv:walletSessionUnused",
+      "configuration": {
+        "sessionSource": "server-session-store",
+        "consumeAcceptedSessionAtomically": true
+      }
+    }
+  ],
+  "odrl": {
+    "@context": ["http://www.w3.org/ns/odrl.jsonld", {"uv": "https://proofsieve.example/vocab/"}],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/03-wallet-presentation",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [{
+      "target": "https://proofsieve.example/resources/wallet-check-in",
+      "action": "uv:approve",
+      "constraint": [
+        {"leftOperand": "uv:walletPresentationVerified", "operator": "eq", "rightOperand": true},
+        {"leftOperand": "uv:walletSessionBound", "operator": "eq", "rightOperand": true},
+        {"leftOperand": "uv:walletSessionAgeSeconds", "operator": "lteq", "rightOperand": 120},
+        {"leftOperand": "uv:walletSessionUnused", "operator": "eq", "rightOperand": true}
+      ]
+    }]
+  },
+  "output": {"mode": "boolean"},
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {"uv:walletPresentationVerified": true, "uv:walletSessionBound": true, "uv:walletSessionAgeSeconds": 30, "uv:walletSessionUnused": true},
+      "expected": {"valid": true, "forwarded": false},
+      "reason": "The verified presentation is bound to this fresh, unused verifier session."
+    },
+    {
+      "id": "deny-wrong-verifier",
+      "facts": {"uv:walletPresentationVerified": true, "uv:walletSessionBound": false, "uv:walletSessionAgeSeconds": 30, "uv:walletSessionUnused": true},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "The otherwise verifiable presentation is bound to another verifier."
+    },
+    {
+      "id": "deny-replay",
+      "facts": {"uv:walletPresentationVerified": true, "uv:walletSessionBound": true, "uv:walletSessionAgeSeconds": 30, "uv:walletSessionUnused": false},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "The verifier already accepted a presentation for this single-use session."
+    },
+    {
+      "id": "deny-stale-session",
+      "facts": {"uv:walletPresentationVerified": true, "uv:walletSessionBound": true, "uv:walletSessionAgeSeconds": 121, "uv:walletSessionUnused": true},
+      "expected": {"valid": false, "forwarded": false},
+      "reason": "The otherwise matching session exceeds the policy's 120-second window."
+    }
+  ],
+  "sources": [
+    "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
+    "https://www.iso.org/standard/69084.html"
+  ]
+}

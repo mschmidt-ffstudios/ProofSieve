@@ -1,0 +1,78 @@
+@startuml
+title ProofSieve | Wallet presentation and evidence recovery
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontColor #15283F
+skinparam sequenceArrowColor #526B8A
+skinparam sequenceParticipantBackgroundColor #EDF4FC
+skinparam sequenceParticipantBorderColor #8CA6C9
+
+actor "Scoped verifier" as Caller
+participant "ProofSieve Guard" as Guard
+participant "Configured verifier\nEUDI or Credo" as Adapter
+actor "Wallet" as Wallet
+database "Wallet session journal" as Journal
+database "Decision evidence" as Evidence
+
+Caller -> Guard: POST to the wallet endpoint\nwith start and operationId
+Guard -> Guard: Authorize the exact endpoint
+Guard -> Journal: Reserve the caller, endpoint and operation
+Guard -> Adapter: Start a presentation transaction
+Adapter --> Guard: Transaction and authorization request URI
+Guard -> Journal: Bind transaction to the session
+Guard --> Caller: HTTP 201 · session, wallet link and expiry
+Caller -> Wallet: Open the authorization request
+Wallet -> Adapter: Present the requested proof
+
+Caller -> Guard: POST complete with the same caller,\nendpoint, operationId and sessionId
+alt Presentation pending
+    Guard -> Adapter: Read the bound transaction result
+    Adapter --> Guard: Pending
+    Guard --> Caller: HTTP 202 · repeat the same completion
+else Presentation resolved before expiry
+    Guard -> Adapter: Retrieve the bound verification result
+    Adapter --> Guard: Checked claims or proof refusal
+    Guard -> Journal: Consume session with durable completion receipt
+    Guard -> Guard: Apply the saved policy to verified claims if available
+    Guard -> Evidence: Record decision and provenance
+    alt Evidence recorded
+        Guard -> Journal: Acknowledge completion receipt
+        Guard --> Caller: Decision ID and outcome
+    else Completion interrupted
+        Guard --> Caller: HTTP 503 · keep the operation blocked
+        Caller -> Guard: Repeat the exact completion within 24 hours\nof session creation
+        Guard -> Evidence: Reconcile the stored receipt
+        alt Decision already recorded
+            Guard -> Journal: Acknowledge completion receipt
+            Guard --> Caller: HTTP 409 · use scoped export to inspect it
+        else No prior decision and storage available
+            Guard -> Journal: Acknowledge completion receipt
+            Guard --> Caller: HTTP 503 · indeterminate with decision ID
+        else Evidence still unavailable
+            Guard --> Caller: HTTP 503 · evidence_unavailable
+        end
+    end
+else Session expired without a confirmed result
+    Guard -> Evidence: Resolve the local expiry decision
+    alt Evidence available and expiry eligible
+        Guard --> Caller: HTTP 503 · wallet_expired
+    else Decision retired after evidence pruning
+        Guard --> Caller: HTTP 409 · wallet_session_conflict
+    else Evidence unavailable
+        Guard --> Caller: HTTP 503 · evidence_unavailable
+    end
+end
+
+opt A recorded decision and signed export enabled
+    Caller -> Guard: GET /evidence with the same caller,\nendpoint, operationId and exact decisionId
+    Guard -> Evidence: Read the caller-scoped decision and sign export
+    Guard --> Caller: HTTP 200 · signed JSON evidence
+end
+
+note over Guard, Journal
+  The recovery receipt stores no raw presentation or plaintext claims.
+  After the recovery deadline, a pending receipt retires without a new
+  signed decision. Inspect pending receipts before downgrading.
+end note
+@enduml

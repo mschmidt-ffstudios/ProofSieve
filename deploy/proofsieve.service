@@ -1,0 +1,35 @@
+[Unit]
+Description=ProofSieve verification service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=proofsieve
+Group=proofsieve-ingress
+RuntimeDirectory=proofsieve-admin proofsieve-ingress
+RuntimeDirectoryMode=0710
+StateDirectory=proofsieve
+StateDirectoryMode=0700
+EnvironmentFile=/etc/proofsieve/private/service.env
+# Apply the stricter admin mode after systemd has prepared both runtime directories.
+ExecStart=/bin/sh -ec '/usr/bin/chmod 0700 /run/proofsieve-admin; exec "$$@"' -- /opt/proofsieve/current/bin/proofsieve --port 24180 --socket /run/proofsieve-admin/guard.sock --proxy-socket /run/proofsieve-ingress/api.sock --proxy-origin ${PROOFSIEVE_PROXY_ORIGIN} --proxy-gid ${PROOFSIEVE_PROXY_GID} --auth-config /etc/proofsieve/private/access.json --state /var/lib/proofsieve/rules.json --evidence /var/lib/proofsieve/evidence.sqlite3 --evidence-export --evidence-retention-days ${PROOFSIEVE_EVIDENCE_DAYS}
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+MemoryMax=512M
+TasksMax=64
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,133 @@
+{
+  "id": "10-did-service",
+  "title": "Require an approved DIDComm service destination",
+  "appliesTo": {
+    "format": "did-document",
+    "type": "didcomm-service"
+  },
+  "checks": [
+    {
+      "id": "didcomm-service-structure",
+      "kind": "didcomm-v2-service-structure",
+      "fact": "uv:didCommServiceStructureValid",
+      "configuration": {
+        "serviceType": "DIDCommMessaging",
+        "requireUniqueServiceId": true,
+        "serviceEndpointShape": "object or non-empty array of objects",
+        "requireUri": true,
+        "validateOptionalAcceptAndRoutingKeys": true
+      }
+    },
+    {
+      "id": "didcomm-destination",
+      "kind": "didcomm-service-destination-allowlist",
+      "fact": "uv:didCommDestinationsAllowed",
+      "configuration": {
+        "endpointSelection": "every endpoint advertised by the selected service",
+        "allowedOrigins": [
+          "https://relay.example"
+        ],
+        "match": "exact parsed HTTPS origin including effective port",
+        "rejectUserInfoAndFragments": true,
+        "endpointNetworkRequests": false
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/10-did-service",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/didcomm-service",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:didCommServiceStructureValid",
+            "operator": "eq",
+            "rightOperand": true
+          },
+          {
+            "leftOperand": "uv:didCommDestinationsAllowed",
+            "operator": "eq",
+            "rightOperand": true
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "boolean"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:didCommServiceStructureValid": true,
+        "uv:didCommDestinationsAllowed": true
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": false
+      },
+      "reason": "The DIDComm service has a valid endpoint object and every advertised URI has an approved origin."
+    },
+    {
+      "id": "deny-wrong-service-type",
+      "facts": {
+        "uv:didCommServiceStructureValid": false,
+        "uv:didCommDestinationsAllowed": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The URI origin is approved, but the selected service does not have type DIDCommMessaging."
+    },
+    {
+      "id": "deny-malformed-endpoint",
+      "facts": {
+        "uv:didCommServiceStructureValid": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "A bare URI string is outside the DIDComm v2.1 service endpoint structure."
+    },
+    {
+      "id": "deny-unlisted-destination",
+      "facts": {
+        "uv:didCommServiceStructureValid": true,
+        "uv:didCommDestinationsAllowed": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "One URI is structurally valid but has an origin outside the operator allowlist."
+    },
+    {
+      "id": "deny-mediator-did",
+      "facts": {
+        "uv:didCommServiceStructureValid": true,
+        "uv:didCommDestinationsAllowed": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "DIDComm allows a mediator DID as a URI. This operator profile permits approved HTTPS origins only."
+    }
+  ],
+  "sources": [
+    "https://www.w3.org/TR/did-1.0/#services",
+    "https://identity.foundation/didcomm-messaging/spec/v2.1/#service-endpoint"
+  ]
+}

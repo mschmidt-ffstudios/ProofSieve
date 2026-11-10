@@ -1,0 +1,91 @@
+{
+  "/verify/demo/eudi-sd-jwt": {
+    "rule": {
+      "language": "odrl",
+      "responseMode": "guard",
+      "policy": {
+        "@context": [
+          "http://www.w3.org/ns/odrl.jsonld",
+          {
+            "field": "https://proofsieve.example/facts/"
+          }
+        ],
+        "@type": "Set",
+        "uid": "urn:proofsieve:demo:eudi-sd-jwt:policy",
+        "profile": "https://proofsieve.example/profiles/basic/v1",
+        "permission": [
+          {
+            "target": "urn:proofsieve:demo:eudi-sd-jwt",
+            "action": "use",
+            "constraint": [
+              {
+                "leftOperand": "field:vct",
+                "operator": "eq",
+                "rightOperand": "urn:eudi:pid:de:1"
+              },
+              {
+                "leftOperand": "field:family_name",
+                "operator": "eq",
+                "rightOperand": "Mustermann"
+              }
+            ]
+          }
+        ]
+      },
+      "credential": {
+        "format": "sd-jwt",
+        "issuer": "https://pid-issuer.bund.de.example",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEb28d4MwZMjw8+00CG4xfnn9SLMVM\nM19SlqZpVb/uNtRe/nNbC6hpOB1LqFXjfIjqAHBOeO6SYVBCcn+QLHOqTw==\n-----END PUBLIC KEY-----\n"
+      }
+    },
+    "credentialExampleExpiresAt": "2029-09-01T23:33:20Z",
+    "credentialExamples": {
+      "valid": "eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIjBIWm1uU0lQejMzN2tTV2U3QzM0bC0tODhnekppLWVCSjJWel9ISndBVGciLCAiMUNybjAzV21VZVJXcDR6d1B2dkNLWGw5WmFRcC1jZFFWX2dIZGFHU1dvdyIsICIycjAwOWR6dkh1VnJXclJYVDVrSk1tSG5xRUhIbldlME1MVlp3OFBBVEI4IiwgIjZaTklTRHN0NjJ5bWxyT0FrYWRqZEQ1WnVsVDVBMjk5Sjc4U0xoTV9fT3MiLCAiNzhqZzc3LUdZQmVYOElRZm9FTFB5TDBEWVBkbWZabzBKZ1ZpVjBfbEtDTSIsICI5MENUOEFhQlBibjVYOG5SWGtlc2p1MWkwQnFoV3FaM3dxRDRqRi1xREdrIiwgIkkwMGZjRlVvRFhDdWNwNXl5MnVqcVBzc0RWR2FXTmlVbGlOel9hd0QwZ2MiLCAiS2pBWGdBQTlONVdIRUR0UkloNHU1TW4xWnNXaXhoaFdBaVgtQTRRaXdnQSIsICJMYWk2SVU2ZDdHUWFnWFI3QXZHVHJuWGdTbGQzejhFSWdfZnYzZk9aMVdnIiwgIkxlemphYlJxaVpPWHpFWW1WWmY4Uk1pOXhBa2QzX00xTFo4VTdFNHMzdTQiLCAiUlR6M3FUbUZOSGJwV3JyT01aUzQxRjQ3NGtGcVJ2M3ZJUHF0aDZQVWhsTSIsICJXMTRYSGJVZmZ6dVc0SUZNanBTVGIxbWVsV3hVV2Y0Tl9vMmxka2tJcWM4IiwgIldUcEk3UmNNM2d4WnJ1UnBYemV6U2JrYk9yOTNQVkZ2V3g4d29KM2oxY0UiLCAiX29oSlZJUUlCc1U0dXBkTlM0X3c0S2IxTUhxSjBMOXFMR3NoV3E2SlhRcyIsICJ5NTBjemMwSVNDaHlfYnNiYTFkTW9VdUFPUTVBTW1PU2ZHb0VlODF2MUZVIl0sICJpc3MiOiAiaHR0cHM6Ly9waWQtaXNzdWVyLmJ1bmQuZGUuZXhhbXBsZSIsICJpYXQiOiAxNjgzMDAwMDAwLCAiZXhwIjogMTg4MzAwMDAwMCwgInZjdCI6ICJ1cm46ZXVkaTpwaWQ6ZGU6MSIsICJfc2RfYWxnIjogInNoYS0yNTYiLCAiY25mIjogeyJqd2siOiB7Imt0eSI6ICJFQyIsICJjcnYiOiAiUC0yNTYiLCAieCI6ICJUQ0FFUjE5WnZ1M09IRjRqNFc0dmZTVm9ISVAxSUxpbERsczd2Q2VHZW1jIiwgInkiOiAiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fX0.ZOZQTqmq8X1mCyFXi0wbV8xjctX1AlEa5TkdnkKOyWvLfW40XDb5oj9tzkgwff5s44IDnrfAdgLtmTcojs97_Q~WyJlSzVvNXBIZmd1cFBwbHRqMXFoQUp3IiwgImFnZV9lcXVhbF9vcl9vdmVyIiwgeyJfc2QiOiBbIjF0RWl5elBSWU9Lc2Y3U3NZR01nUFpLc09UMWxRWlJ4SFhBMHI1X0J3a2siLCAiQ1ZLbmx5NVA5MHlKczNFd3R4UWlPdFVjemFYQ1lOQTRJY3pSYW9ock1EZyIsICJhNDQtZzJHcjhfM0FtSncyWFo4a0kxeTBRel96ZTlpT2NXMlczUkxwWEdnIiwgImdrdnkwRnV2QkJ2ajBoczJaTnd4Y3FPbGY4bXUyLWtDRTctTmIyUXh1QlUiLCAiaHJZNEhubUY1YjVKd0M5ZVR6YUZDVWNlSVFBYUlkaHJxVVhRTkNXYmZaSSIsICJ5NlNGclZGUnlxNTBJYlJKdmlUWnFxalFXejB0TGl1Q21NZU8wS3FhekdJIl19XQ~WyJPQktsVFZsdkxnLUFkd3FZR2JQOFpBIiwgIjE4IiwgdHJ1ZV0~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIm5hdGlvbmFsaXRpZXMiLCBbIkRFIl1d~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIk11c3Rlcm1hbm4iXQ~",
+      "tampered": "eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIjBIWm1uU0lQejMzN2tTV2U3QzM0bC0tODhnekppLWVCSjJWel9ISndBVGciLCAiMUNybjAzV21VZVJXcDR6d1B2dkNLWGw5WmFRcC1jZFFWX2dIZGFHU1dvdyIsICIycjAwOWR6dkh1VnJXclJYVDVrSk1tSG5xRUhIbldlME1MVlp3OFBBVEI4IiwgIjZaTklTRHN0NjJ5bWxyT0FrYWRqZEQ1WnVsVDVBMjk5Sjc4U0xoTV9fT3MiLCAiNzhqZzc3LUdZQmVYOElRZm9FTFB5TDBEWVBkbWZabzBKZ1ZpVjBfbEtDTSIsICI5MENUOEFhQlBibjVYOG5SWGtlc2p1MWkwQnFoV3FaM3dxRDRqRi1xREdrIiwgIkkwMGZjRlVvRFhDdWNwNXl5MnVqcVBzc0RWR2FXTmlVbGlOel9hd0QwZ2MiLCAiS2pBWGdBQTlONVdIRUR0UkloNHU1TW4xWnNXaXhoaFdBaVgtQTRRaXdnQSIsICJMYWk2SVU2ZDdHUWFnWFI3QXZHVHJuWGdTbGQzejhFSWdfZnYzZk9aMVdnIiwgIkxlemphYlJxaVpPWHpFWW1WWmY4Uk1pOXhBa2QzX00xTFo4VTdFNHMzdTQiLCAiUlR6M3FUbUZOSGJwV3JyT01aUzQxRjQ3NGtGcVJ2M3ZJUHF0aDZQVWhsTSIsICJXMTRYSGJVZmZ6dVc0SUZNanBTVGIxbWVsV3hVV2Y0Tl9vMmxka2tJcWM4IiwgIldUcEk3UmNNM2d4WnJ1UnBYemV6U2JrYk9yOTNQVkZ2V3g4d29KM2oxY0UiLCAiX29oSlZJUUlCc1U0dXBkTlM0X3c0S2IxTUhxSjBMOXFMR3NoV3E2SlhRcyIsICJ5NTBjemMwSVNDaHlfYnNiYTFkTW9VdUFPUTVBTW1PU2ZHb0VlODF2MUZVIl0sICJpc3MiOiAiaHR0cHM6Ly9waWQtaXNzdWVyLmJ1bmQuZGUuZXhhbXBsZSIsICJpYXQiOiAxNjgzMDAwMDAwLCAiZXhwIjogMTg4MzAwMDAwMCwgInZjdCI6ICJ1cm46ZXVkaTpwaWQ6ZGU6MSIsICJfc2RfYWxnIjogInNoYS0yNTYiLCAiY25mIjogeyJqd2siOiB7Imt0eSI6ICJFQyIsICJjcnYiOiAiUC0yNTYiLCAieCI6ICJUQ0FFUjE5WnZ1M09IRjRqNFc0dmZTVm9ISVAxSUxpbERsczd2Q2VHZW1jIiwgInkiOiAiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fX0.ZOZQTqmq8X1mCyFXi0wbV8xjctX1AlEa5TkdnkKOyWvLfW40XDb5oj9tzkgwff5s44IDnrfAdgLtmTcojs97_Q~WyJlSzVvNXBIZmd1cFBwbHRqMXFoQUp3IiwgImFnZV9lcXVhbF9vcl9vdmVyIiwgeyJfc2QiOiBbIjF0RWl5elBSWU9Lc2Y3U3NZR01nUFpLc09UMWxRWlJ4SFhBMHI1X0J3a2siLCAiQ1ZLbmx5NVA5MHlKczNFd3R4UWlPdFVjemFYQ1lOQTRJY3pSYW9ock1EZyIsICJhNDQtZzJHcjhfM0FtSncyWFo4a0kxeTBRel96ZTlpT2NXMlczUkxwWEdnIiwgImdrdnkwRnV2QkJ2ajBoczJaTnd4Y3FPbGY4bXUyLWtDRTctTmIyUXh1QlUiLCAiaHJZNEhubUY1YjVKd0M5ZVR6YUZDVWNlSVFBYUlkaHJxVVhRTkNXYmZaSSIsICJ5NlNGclZGUnlxNTBJYlJKdmlUWnFxalFXejB0TGl1Q21NZU8wS3FhekdJIl19XQ~WyJPQktsVFZsdkxnLUFkd3FZR2JQOFpBIiwgIjE4IiwgdHJ1ZV0~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIm5hdGlvbmFsaXRpZXMiLCBbIkRFIl1d~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIlNjaG1pZHQiXQ~"
+    }
+  },
+  "/verify/demo/eudi-mdoc": {
+    "credentialExampleExpiresAt": "2031-01-01T00:00:00Z",
+    "rule": {
+      "language": "odrl",
+      "responseMode": "guard",
+      "policy": {
+        "@context": [
+          "http://www.w3.org/ns/odrl.jsonld",
+          {
+            "field": "https://proofsieve.example/facts/"
+          }
+        ],
+        "@type": "Set",
+        "uid": "urn:proofsieve:demo:eudi-mdoc:policy",
+        "profile": "https://proofsieve.example/profiles/basic/v1",
+        "permission": [
+          {
+            "target": "urn:proofsieve:demo:eudi-mdoc",
+            "action": "use",
+            "constraint": [
+              {
+                "leftOperand": "field:docType",
+                "operator": "eq",
+                "rightOperand": "eu.europa.ec.eudi.pid.1"
+              },
+              {
+                "leftOperand": "field:issuing_country",
+                "operator": "eq",
+                "rightOperand": "GR"
+              }
+            ]
+          }
+        ]
+      },
+      "credential": {
+        "format": "mdoc",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6uK1g7Qz01IOUnwgvS+7Zv71eVrJ\nyxrTcCZUMAMp4R+GXpFY3AYA0rbvUUcUgRD+PQSNni6+H6mWl2MrQD3ovg==\n-----END PUBLIC KEY-----\n"
+      }
+    },
+    "credentialExamples": {
+      "valid": "ompuYW1lU3BhY2VzoXdldS5ldXJvcGEuZWMuZXVkaS5waWQuMYPYGFhVpGhkaWdlc3RJRABmcmFuZG9tUKsbN9yaPZLz1v-pHzvTq19xZWxlbWVudElkZW50aWZpZXJvaXNzdWluZ19jb3VudHJ5bGVsZW1lbnRWYWx1ZWJHUtgYWFakaGRpZ2VzdElEAWZyYW5kb21QZJVQfdwQyNrtnF1_r3gVVnFlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWxlbGVtZW50VmFsdWVnRXhhbXBsZdgYWFekaGRpZ2VzdElEAmZyYW5kb21Q8FB93g7CndjvW2TmwTxHM3FlbGVtZW50SWRlbnRpZmllcmpnaXZlbl9uYW1lbGVsZW1lbnRWYWx1ZWlTeW50aGV0aWNqaXNzdWVyQXV0aIRDoQEmoFkBRtgYWQFBpWd2ZXJzaW9uYzEuMG9kaWdlc3RBbGdvcml0aG1nU0hBLTI1Nmdkb2NUeXBld2V1LmV1cm9wYS5lYy5ldWRpLnBpZC4xbHZhbHVlRGlnZXN0c6F3ZXUuZXVyb3BhLmVjLmV1ZGkucGlkLjGjAFgg36B1dZxG08o4TQ9mey8hsG9p8vLlWfU790N7JY4wkwQBWCDJi6QUdFUd0yBFVOEyB3u6dlg_J80UiuCsrj3L7_wyMgJYIOEmS61eaSCnmcP0o8eI4CMF2tgEc9Red7WpZcYzQb8jbHZhbGlkaXR5SW5mb6Nmc2lnbmVkwHQyMDI2LTAxLTAxVDAwOjAwOjAwWml2YWxpZEZyb23AdDIwMjYtMDEtMDFUMDA6MDA6MDBaanZhbGlkVW50aWzAdDIwMzEtMDEtMDFUMDA6MDA6MDBaWEDpzyPxuU7Y1Wrf5PADLM8aqeZzi3VMV7Ij9841bIeff12iTBSUH6toTf9TxHNJUes6nO73anUpX3Ab_uvlZ-R5",
+      "tampered": "ompuYW1lU3BhY2VzoXdldS5ldXJvcGEuZWMuZXVkaS5waWQuMYPYGFhVpGhkaWdlc3RJRABmcmFuZG9tUKsbN9yaPZLz1v-pHzvTq19xZWxlbWVudElkZW50aWZpZXJvaXNzdWluZ19jb3VudHJ5bGVsZW1lbnRWYWx1ZWJHUtgYWFakaGRpZ2VzdElEAWZyYW5kb21QZJVQfdwQyNrtnF1_r3gVVnFlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWxlbGVtZW50VmFsdWVnRXhhbXBsZdgYWFekaGRpZ2VzdElEAmZyYW5kb21Q8FB93g7CndjvW2TmwTxHM3FlbGVtZW50SWRlbnRpZmllcmpnaXZlbl9uYW1lbGVsZW1lbnRWYWx1ZWlTeW50aGV0aWNqaXNzdWVyQXV0aIRDoQEmoFkBRtgYWQFBpWd2ZXJzaW9uYzEuMG9kaWdlc3RBbGdvcml0aG1nU0hBLTI1Nmdkb2NUeXBld2V1LmV1cm9wYS5lYy5ldWRpLnBpZC4xbHZhbHVlRGlnZXN0c6F3ZXUuZXVyb3BhLmVjLmV1ZGkucGlkLjGjAFgg36B1dZxG08o4TQ9mey8hsG9p8vLlWfU790N7JY4wkwQBWCDJi6QUdFUd0yBFVOEyB3u6dlg_J80UiuCsrj3L7_wyMgJYIOEmS61eaSCnmcP0o8eI4CMF2tgEc9Red7WpZcYzQb8jbHZhbGlkaXR5SW5mb6Nmc2lnbmVkwHQyMDI2LTAxLTAxVDAwOjAwOjAwWml2YWxpZEZyb23AdDIwMjYtMDEtMDFUMDA6MDA6MDBaanZhbGlkVW50aWzAdDIwMzEtMDEtMDFUMDA6MDA6MDBaWEDozyPxuU7Y1Wrf5PADLM8aqeZzi3VMV7Ij9841bIeff12iTBSUH6toTf9TxHNJUes6nO73anUpX3Ab_uvlZ-R5"
+    }
+  }
+}

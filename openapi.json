@@ -1,0 +1,220 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ProofSieve Guard",
+    "version": "0.5.0",
+    "description": "Checks input against the rule saved for the requested verification endpoint. The running server publishes its configured paths using the /verify operation as a template."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An operator-issued opaque token or an enabled Keycloak service-account access token. The protected runtime publishes only endpoints granted to that token."
+      }
+    },
+    "schemas": {
+      "UrlDecision": {
+        "type": "object",
+        "required": ["valid"],
+        "additionalProperties": false,
+        "properties": {
+          "valid": {"type": "boolean"},
+          "redirectUrl": {"type": "string", "format": "uri", "pattern": "^[hH][tT][tT][pP][sS]://"}
+        }
+      },
+      "AccessError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {"error": {"type": "string"}, "code": {"const": "forbidden"}}
+      },
+      "CredentialRejection": {
+        "type": "object",
+        "required": ["error", "stage", "code"],
+        "properties": {"error": {"type": "string"}, "stage": {"const": "credential"}, "code": {"const": "credential_rejected"}}
+      },
+      "DocumentProofs": {
+        "type": "object",
+        "required": ["document", "proofs"],
+        "additionalProperties": false,
+        "properties": {
+          "document": {"type": "string", "contentEncoding": "base64", "description": "Exact document bytes. The decoded document limit is 64 KiB."},
+          "proofs": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": ["signer"],
+              "additionalProperties": false,
+              "properties": {
+                "signer": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+                "signature": {"type": "string", "contentEncoding": "base64", "description": "Required for a detached signature or RFC 3161 timestamp token. Omit for an embedded PAdES or ASiC signature."}
+              }
+            }
+          }
+        }
+      },
+      "Decision": {
+        "type": "object",
+        "required": ["outcome", "valid", "reason", "decisionId", "operationId", "ruleVersion"],
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {"enum": ["allow", "deny", "indeterminate"]},
+          "valid": {"type": "boolean"},
+          "reason": {"enum": ["policy_allowed", "policy_denied", "credential_rejected", "check_failed", "check_indeterminate", "wallet_rejected", "wallet_expired", "wallet_evidence_interrupted"]},
+          "decisionId": {"type": "string", "format": "uuid"},
+          "operationId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+          "ruleVersion": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "delivery": {
+            "type": "object",
+            "required": ["state"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string", "format": "uuid"},
+              "state": {"enum": ["not_forwarded", "pending", "delivered", "rejected", "unknown"]},
+              "upstreamStatus": {"type": "integer", "minimum": 200, "maximum": 599}
+            }
+          }
+        }
+      },
+      "ForwardingDecision": {
+        "allOf": [{"$ref": "#/components/schemas/Decision"}, {"required": ["delivery"]}]
+      },
+      "WalletAction": {
+        "oneOf": [
+          {"type": "object", "required": ["action"], "additionalProperties": false,
+           "properties": {"action": {"const": "start"}}},
+          {"type": "object", "required": ["action", "sessionId"], "additionalProperties": false,
+           "properties": {"action": {"const": "complete"}, "sessionId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"}}}
+        ]
+      },
+      "WalletSession": {
+        "type": "object",
+        "required": ["state", "sessionId", "operationId", "authorizationRequestUri", "expiresAt"],
+        "properties": {
+          "state": {"const": "pending"},
+          "sessionId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+          "operationId": {"type": "string"},
+          "authorizationRequestUri": {"type": "string", "format": "uri"},
+          "expiresAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  },
+  "paths": {
+    "/verify": {
+      "post": {
+        "operationId": "verify",
+        "summary": "Evaluate the endpoint rule",
+        "description": "The endpoint rule selects boolean, guard, url, or decision mode. Decision mode requires operationId and returns a recorded decision for that operation. Other modes accept data alone. URL mode returns the configured HTTPS destination for the outcome.",
+        "parameters": [{
+          "name": "If-Match",
+          "in": "header",
+          "description": "Optional strong ETag of the saved rule. A mismatch stops verification before evaluation.",
+          "schema": {"type": "string", "pattern": "^\"[0-9a-f]{64}\"$"}
+        }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["data"],
+                "additionalProperties": false,
+                "properties": {
+                  "data": {
+                    "description": "JSON facts for a plain ODRL rule, RDF Turtle for SHACL, a compact credential for a signed endpoint, or a document and proofs object for an endpoint with a verification profile.",
+                    "oneOf": [{"type": "object"}, {"type": "string"}]
+                  },
+                  "operationId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+                    "description": "Required only in decision mode. Use the caller's opaque operation reference."
+                  }
+                }
+              },
+              "examples": {
+                "odrl": {"value": {"data": {"status": "active"}}},
+                "decision": {"value": {"data": {"status": "active"}, "operationId": "PO-1042"}},
+                "shacl": {"value": {"data": "@prefix ex: <https://proofsieve.example/demo/> . ex:request ex:status \"active\" ."}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Boolean and Guard modes return a boolean. URL mode returns the outcome and optional destination. Decision mode returns a recorded approval or refusal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {"type": "boolean"},
+                    {"$ref": "#/components/schemas/Decision"},
+                    {"$ref": "#/components/schemas/UrlDecision"}
+                  ]
+                },
+                "examples": {
+                  "booleanApproval": {"value": true},
+                  "booleanRefusal": {"value": false},
+                  "urlApproval": {"value": {"valid": true, "redirectUrl": "https://app.example/accepted"}},
+                  "urlRefusal": {"value": {"valid": false, "redirectUrl": "https://app.example/denied"}},
+                  "urlBranchWithoutDestination": {"value": {"valid": false}},
+                  "recordedApproval": {"value": {"outcome": "allow", "valid": true, "reason": "policy_allowed", "operationId": "PO-1042", "decisionId": "c97c6278-a753-4545-8302-5fdd2183db01", "ruleVersion": "03cf2a89be80bf5412ce38cc26991d10192617a711d2ac24bf55353782daae398"}},
+                  "recordedRefusal": {"value": {"outcome": "deny", "valid": false, "reason": "policy_denied", "operationId": "PO-1042", "decisionId": "05d0e53d-d2cc-482e-a4d7-01907e2ac3fe", "ruleVersion": "03cf2a89be80bf5412ce38cc26991d10192617a711d2ac24bf55353782daae398"}}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request or input for the endpoint rule.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "additionalProperties": false,
+                  "properties": {"error": {"type": "string"}}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The protected runtime requires a valid bearer token."
+          },
+          "403": {
+            "description": "An authenticated caller without the endpoint grant gets code=forbidden. A rejected credential returns stage=credential and code=credential_rejected before policy evaluation. Guard mode returns JSON false for a policy refusal.",
+            "content": {
+              "application/json": {
+                "schema": {"oneOf": [{"const": false}, {"type": "object", "required": ["error"], "properties": {"error": {"type": "string"}, "stage": {"const": "credential"}, "code": {"enum": ["forbidden", "credential_rejected"]}}}]}
+              }
+            }
+          },
+          "412": {
+            "description": "The saved rule no longer matches the requested ETag.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error", "code"],
+                  "additionalProperties": false,
+                  "properties": {"error": {"type": "string"}, "code": {"const": "rule_version_conflict"}}
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A required check was unconfirmed or the evidence store was unavailable. The caller keeps the operation blocked.",
+            "content": {
+              "application/json": {
+                "schema": {"oneOf": [
+                  {"$ref": "#/components/schemas/Decision"},
+                  {"type": "object", "required": ["error", "code"], "properties": {"error": {"type": "string"}, "code": {"const": "evidence_unavailable"}}}
+                ]}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

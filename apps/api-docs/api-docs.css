@@ -1,0 +1,27 @@
+.api-panel {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.api-panel label { font-weight: 650; }
+.api-panel p, #api-status { margin-block: 8px; color: var(--muted); }
+#api-status[data-error="true"] { color: #a32020; }
+.api-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block: 8px; }
+.api-controls[hidden] { display: none; }
+.api-controls input, .api-controls button {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+.api-controls input { flex: 1 1 220px; min-width: 0; }
+.api-controls button { background: #fff; color: var(--ink); cursor: pointer; }
+#api-sign-in { background: var(--blue); color: #fff; }
+.api-controls button:disabled { opacity: .65; cursor: default; }
+#api-explorer .swagger-ui .wrapper { padding-inline: 0; }
+#api-explorer:lang(de) .swagger-ui .loading-container .loading::after { content: "wird geladen"; }
+#api-explorer:lang(de) .swagger-ui .parameter__name.required::after { content: "Pflichtfeld"; }
+@media (max-width: 400px) {
+  #api-explorer .swagger-ui .responses-wrapper { overflow-x: auto; }
+}

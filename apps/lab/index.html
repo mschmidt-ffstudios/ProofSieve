@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="de" data-en-title="ProofSieve · Verification Lab">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>ProofSieve · Prüflabor</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="../shared/language.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace" data-en="Skip to verification lab">Zum Prüflabor</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Prüfbeispiele" data-en-aria-label="Verification examples">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.5 20 6v5.3c0 4.7-2.7 8-8 10.2-5.3-2.2-8-5.5-8-10.2V6l8-3.5Z"></path>
+            <path d="m8.8 12 2.2 2.2 4.4-4.4"></path>
+          </svg>
+        </span>
+        <div>
+          <strong>ProofSieve</strong>
+          <span data-en="Verification Lab">Prüflabor</span>
+        </div>
+      </div>
+      <div class="sidebar-heading">
+        <h2 data-en="Verification examples">Prüfbeispiele</h2>
+        <span class="count">10</span>
+      </div>
+      <nav id="example-list" class="example-list" aria-label="Beispiel auswählen" data-en-aria-label="Choose an example">
+        <p class="placeholder" data-en="Loading examples …">Beispiele werden geladen …</p>
+      </nav>
+      <footer class="sidebar-footer">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span data-en="Sandbox · synthetic test data">Sandbox · synthetische Testdaten</span>
+      </footer>
+    </aside>
+
+    <main id="workspace" class="workspace" tabindex="-1">
+      <header class="workspace-header">
+        <div class="workspace-bar">
+          <nav class="app-nav" aria-label="Anwendungen" data-en-aria-label="Applications">
+            <a href="/apps/" data-en="Overview">Übersicht</a>
+            <a href="/apps/guard/">Guard</a>
+            <a href="/apps/builder/">Credential Builder</a>
+            <a href="/apps/lab/" aria-current="page" data-en="Verification Lab">Prüflabor</a>
+            <a href="/apps/api-docs/">Swagger UI</a>
+            <select data-language aria-label="Sprache / Language">
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+            </select>
+          </nav>
+          <span class="sandbox-label"><span class="status-dot" aria-hidden="true"></span><span data-en="Simulation · test data">Simulation · Testdaten</span></span>
+        </div>
+        <div class="selection-header">
+          <div class="selection-copy">
+            <h1 id="rule-title" data-en="Loading example">Prüfbeispiel wird geladen</h1>
+            <p id="rule-description" data-en="Choose an example, adjust the checks and see how the rule decides.">Wähle ein Beispiel, passe die Prüfwerte an und sieh, wie die Regel entscheidet.</p>
+            <div class="rule-tags" aria-label="Ausgewähltes Format und Typ" data-en-aria-label="Selected format and type">
+              <span id="rule-format" class="badge" data-state="info"></span>
+              <span id="rule-type" class="badge" data-state="info"></span>
+            </div>
+            <p id="lab-export-help" data-en="The export contains a Lab scenario. The live Guard uses rules in the Basic Guard profile.">Der Export enthält ein Lab-Szenario. Der Live-Guard verwendet Regeln im Basic-Guard-Profil.</p>
+          </div>
+          <div class="header-actions">
+            <button type="button" id="reset-rule" class="button" disabled data-en="Reset">Zurücksetzen</button>
+            <button type="button" id="export-rule" class="button primary" aria-describedby="lab-export-help" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 4v11m-4-4 4 4 4-4M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"></path>
+              </svg>
+              <span data-en="Export Lab scenario">Lab-Szenario exportieren</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="work-grid">
+        <section class="panel" aria-labelledby="config-heading">
+          <header class="panel-heading">
+            <span class="step-label" aria-hidden="true">01</span>
+            <div>
+              <h2 id="config-heading" tabindex="-1" data-en="Quick configuration">Schnellkonfiguration</h2>
+              <p data-en="Verification sources and expected values">Prüfquellen und Sollwerte des Beispiels</p>
+            </div>
+          </header>
+          <div id="config-panel" class="panel-content">
+            <p class="placeholder" data-en="Loading configuration …">Konfiguration wird geladen …</p>
+          </div>
+        </section>
+
+        <section class="panel graph-panel" aria-labelledby="graph-heading">
+          <header class="panel-heading">
+            <span class="step-label" aria-hidden="true">02</span>
+            <div>
+              <h2 id="graph-heading" data-en="Verification graph">Prüfgraph</h2>
+              <p data-en="From proof through checks to the decision">Vom Nachweis über die Prüfschritte zur Entscheidung</p>
+            </div>
+          </header>
+          <div id="graph-panel" class="panel-content">
+            <p class="placeholder" data-en="Loading verification graph …">Prüfgraph wird geladen …</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel test-panel" aria-labelledby="test-heading">
+        <header class="panel-heading">
+          <span class="step-label" aria-hidden="true">03</span>
+          <div>
+            <h2 id="test-heading" data-en="Test area">Testfenster</h2>
+            <p data-en="Choose a test case and trace the decision">Testfall auswählen und die Entscheidung nachvollziehen</p>
+          </div>
+        </header>
+        <div class="test-grid">
+          <section class="test-column" aria-labelledby="cases-heading">
+            <h3 id="cases-heading" data-en="Test cases">Testfälle</h3>
+            <div id="cases-panel">
+              <p class="placeholder" data-en="Loading test cases …">Testfälle werden geladen …</p>
+            </div>
+          </section>
+          <section class="test-column" aria-labelledby="result-heading">
+            <h3 id="result-heading" data-en="Verification result and API">Prüfergebnis und API</h3>
+            <div id="result-panel">
+              <p class="placeholder" data-en="The verification result appears here.">Hier erscheint das Prüfergebnis.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <p id="app-status" class="app-status" role="status"></p>
+    </main>
+  </div>
+
+  <dialog id="dialog" aria-labelledby="dialog-title">
+    <header class="dialog-header">
+      <h2 id="dialog-title"></h2>
+      <button id="dialog-close" type="button" class="icon-button" aria-label="Schließen" data-en-aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+    </header>
+    <div id="dialog-body" class="dialog-body"></div>
+  </dialog>
+</body>
+</html>

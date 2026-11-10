@@ -1,0 +1,29 @@
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.policy-header h2 { flex: 1; }
+.guard-access .panel h1 { font-size: 1.06rem; }
+.policy-header button { padding: 4px 9px; white-space: nowrap; }
+.rule-code { padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; }
+.rule-code summary { color: var(--blue); font-size: .85rem; font-weight: 670; cursor: pointer; }
+.rule-code[open] summary { margin-bottom: 7px; }
+#guard-document-profile > * + * { margin-top: 7px; }
+#guard-profile-signers { overflow-wrap: anywhere; }
+.rule-outputs { display: grid; gap: 7px; min-width: 0; margin: 0; padding: 7px 9px 9px; border: 1px solid var(--line); border-radius: 7px; }
+.rule-outputs legend { padding-inline: 4px; color: var(--ink); font-size: .86rem; font-weight: 700; }
+.branch { display: inline-block; margin-right: 4px; padding: 1px 5px; border-radius: 4px; font-size: .76rem; }
+.branch.allow { background: #e4f6ee; color: #176347; }
+.branch.deny { background: #fff0f0; color: #973340; }
+.handoff { display: grid; justify-items: start; gap: 6px; padding: 8px; border: 1px solid #c9daf2; border-radius: 7px; background: #f5f9ff; }
+.credential { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid #c9daf2; border-radius: 7px; background: #f5f9ff; }
+.credential-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.credential-badge { padding: 2px 6px; border-radius: 5px; color: var(--blue); background: #e2edfc; font-size: .75rem; }
+.credential-flow { display: grid; gap: 3px; margin: 0; padding-inline-start: 22px; font-size: .84rem; }
+.credential-flow li { padding: 2px 0; }
+.credential-flow strong { display: inline-block; margin-inline-start: 6px; padding: 1px 5px; border-radius: 4px; color: var(--muted); background: #e7effa; font-size: .75rem; }
+.credential-flow strong[data-state="passed"], .credential-flow strong[data-state="allowed"] { background: #e4f6ee; color: #176347; }
+.credential-flow strong[data-state="denied"], .credential-flow strong[data-state="unconfirmed"] { background: #fff0f0; color: #973340; }
+#guard-http-status { color: var(--muted); }
+#guard-response { min-height: 48px; padding: 9px; color: #ebf5ff; background: #152941; white-space: pre-wrap; overflow-wrap: anywhere; }
+#guard-response:empty::before { content: "Noch keine Prüfung ausgeführt."; color: #b9cbe3; }
+.result-detail { margin: 7px 9px; }
+.response-link { display: inline-block; margin: 7px 9px; color: var(--blue); font-size: .85rem; font-weight: 670; }
+@media (max-width: 450px) { .form-row { grid-template-columns: minmax(0, 1fr); } }

@@ -1,0 +1,54 @@
+@startuml
+title ProofSieve · Author, test and activate a rule
+hide footbox
+
+actor Administrator as Admin
+participant "Guard UI" as UI
+participant "Guard API" as API
+participant "Saved rules\n(JSON state)" as Rules
+
+Admin -> UI: Sign in with an admin token
+UI -> API: GET /auth/me
+API --> UI: Admin identity, endpoint grants and editor token
+
+alt Edit an existing writable endpoint
+    Admin -> UI: Select a granted /verify/... path
+    UI -> API: GET /admin/rule?endpoint=...
+    API -> Rules: Read current rule
+    API --> UI: Saved rule and ETag
+else Create an endpoint
+    Admin -> UI: Enter a permitted /verify/... path
+end
+
+alt ODRL
+    Admin -> UI: Edit nested conditions in the graph or JSON-LD
+    Admin -> UI: Apply or discard pending condition edits
+    UI -> UI: Sync the graph and supported JSON-LD draft
+else SHACL
+    Admin -> UI: Edit Turtle shapes in the text editor
+end
+Admin -> UI: Choose the response mode and edit its options
+
+opt Test the draft in the dialog
+    Admin -> UI: Paste or load input\nRun document checks explicitly with the saved profile
+    UI -> API: POST /admin/test-rule?endpoint=...\nDraft rule and test input
+    API -> API: Check admin grant and editor token\nEvaluate the draft using configured checks
+    API --> UI: Decision preview and available rule trace
+    note over UI, API
+      The preview evaluates the input on the server.
+      Live forwarding and decision evidence are tied to POST /verify/...
+    end note
+end
+
+opt Activate the draft
+    Admin -> UI: Save rule
+    UI -> API: PUT /admin/rule?endpoint=...\nIf-Match for edits, If-None-Match: * for creation
+    API -> API: Check admin grant, editor token and rule
+    alt Save condition holds
+        API -> Rules: Store and activate the rule
+        API --> UI: Saved rule and new ETag
+    else Stale edit or path already exists
+        API --> UI: HTTP 412 · Reload and reconcile
+    end
+end
+@enduml

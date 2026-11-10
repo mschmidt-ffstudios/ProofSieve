@@ -1,0 +1,118 @@
+{
+  "id": "05-qualified-seal",
+  "title": "Require a qualified electronic seal on a PDF",
+  "appliesTo": {
+    "format": "pades",
+    "type": "electronic-seal"
+  },
+  "checks": [
+    {
+      "id": "seal-validation",
+      "kind": "pades-seal-validation",
+      "fact": "uv:sealValidation",
+      "configuration": {
+        "validationPolicy": "ETSI technical validation for a PAdES seal",
+        "trustedLists": "EU List of Trusted Lists and referenced national trusted lists",
+        "verifyDocumentIntegrity": true,
+        "verifyCertificatePathAndRevocation": true,
+        "timeBasis": "established sealing time"
+      }
+    },
+    {
+      "id": "seal-qualification",
+      "kind": "eidas-seal-qualification",
+      "fact": "uv:sealQualification",
+      "configuration": {
+        "requireQualifiedSealCertificate": true,
+        "requireQualifiedSealCreationDevice": true,
+        "useTrustServiceStatusAtSealingTime": true
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/05-qualified-seal",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/sealed-pdf",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:sealValidation",
+            "operator": "eq",
+            "rightOperand": "passed"
+          },
+          {
+            "leftOperand": "uv:sealQualification",
+            "operator": "eq",
+            "rightOperand": "qualified"
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "boolean"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:sealValidation": "passed",
+        "uv:sealQualification": "qualified"
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": false
+      },
+      "reason": "Synthetic validation establishes a qualified electronic seal."
+    },
+    {
+      "id": "deny-advanced-seal",
+      "facts": {
+        "uv:sealValidation": "passed",
+        "uv:sealQualification": "advanced-with-qualified-certificate"
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "A qualified certificate alone does not establish a qualified seal."
+    },
+    {
+      "id": "deny-altered-pdf",
+      "facts": {
+        "uv:sealValidation": "failed",
+        "uv:sealQualification": "qualified"
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The document integrity check failed."
+    },
+    {
+      "id": "deny-unknown-qualification",
+      "facts": {
+        "uv:sealValidation": "indeterminate"
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The qualification at sealing time could not be established."
+    }
+  ],
+  "sources": [
+    "https://eur-lex.europa.eu/eli/reg/2014/910/2024-10-18/eng",
+    "https://eur-lex.europa.eu/eli/reg_impl/2025/1945/oj/eng",
+    "https://portal.etsi.org/webapp/WorkProgram/Report_WorkItem.asp?WKI_ID=68047"
+  ]
+}

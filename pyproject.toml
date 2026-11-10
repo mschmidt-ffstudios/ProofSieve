@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling==1.33.0", "hatch-requirements-txt==0.4.1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "proofsieve"
+version = "0.5.0"
+description = "Credential verification and policy decision service"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0 AND BSD-3-Clause AND MIT AND ISC AND 0BSD AND Unlicense"
+license-files = ["LICENSE", "NOTICE", "examples/signed/LICENSE-*", "apps/api-docs/vendor/LICENSE", "apps/api-docs/vendor/NOTICE", "apps/api-docs/vendor/*.LICENSE.txt"]
+dynamic = ["dependencies"]
+
+[project.scripts]
+proofsieve = "proofsieve.__main__:main"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/proofsieve/**/*.py",
+    "/apps/**/*.css",
+    "/apps/**/*.html",
+    "/apps/**/*.js",
+    "/apps/api-docs/vendor/*",
+    "/examples/**/*.json",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+apps = "proofsieve/assets/apps"
+examples = "proofsieve/assets/examples"
+
+[tool.hatch.build.targets.wheel.force-include]
+"openapi.json" = "proofsieve/assets/openapi.json"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/proofsieve/**/*.py",
+    "/apps/**/*.css",
+    "/apps/**/*.html",
+    "/apps/**/*.js",
+    "/apps/api-docs/vendor/*",
+    "/examples/**/*.json",
+    "/examples/**/*.md",
+    "/examples/**/LICENSE-*",
+    "/examples/company/run.py",
+    "/examples/acceptance/**/*.py",
+    "/examples/acceptance/**/*.xml",
+    "/examples/acceptance/**/*.java",
+    "/examples/acceptance/**/*.sh",
+    "/integrations/credo/*.mjs",
+    "/integrations/credo/*.json",
+    "/integrations/credo/README.md",
+    "/deploy/**",
+    "/docs/**/*.md",
+    "/docs/**/*.puml",
+    "/docs/diagrams/*.png",
+    "/docs/images/*.png",
+    "/tests/**/*.py",
+    "/CONTRIBUTING.md",
+    "/LICENSE",
+    "/NOTICE",
+    "/README.md",
+    "/SECURITY.md",
+    "/openapi.json",
+    "/pyproject.toml",
+    "/requirements.txt",
+]

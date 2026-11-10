@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "principals": [
+    {
+      "id": "operator",
+      "role": "admin",
+      "tokenSha256": "REPLACE_WITH_OPERATOR_TOKEN_SHA256",
+      "endpoints": ["*"]
+    },
+    {
+      "id": "verification-client",
+      "role": "verifier",
+      "tokenSha256": "REPLACE_WITH_VERIFICATION_CLIENT_TOKEN_SHA256",
+      "endpoints": ["/verify"]
+    }
+  ]
+}

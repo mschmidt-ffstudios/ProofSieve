@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12', '3.14']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Check private workspace boundary
+        run: test -z "$(git ls-files -- internal instance)"
+      - name: Install test and build dependencies
+        run: python -m pip install -r requirements.txt build==1.6.1
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Run company use case
+        run: python examples/company/run.py
+      - name: Run Chromium workflows
+        if: matrix.python-version == '3.12'
+        run: |
+          python -m pip install playwright==1.60.0
+          python -m playwright install --with-deps chromium
+          python -m tests.workspace_browser
+          python -m tests.guard_browser
+          python -m tests.guard_editor_browser
+          python -m tests.operator_workflow_browser
+          python -m tests.verifier_handoff_browser
+          python -m tests.api_docs_browser
+      - name: Audit runtime Python dependencies
+        if: matrix.python-version == '3.12'
+        run: |
+          python -m pip install pip-audit==2.10.1
+          python -m pip_audit -r requirements.txt
+      - name: Build and install distribution
+        run: |
+          python -m build
+          python -m pip install dist/*.whl
+      - name: Check distribution and installed CLI
+        run: python tests/smoke_installed.py dist/*.whl dist/*.tar.gz
+
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '25.0.5'
+          cache: maven
+          cache-dependency-path: examples/acceptance/dss/pom.xml
+      - name: Install acceptance dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download and verify the pinned Keycloak distribution
+        run: |
+          curl --fail --silent --show-error --location \
+            https://github.com/keycloak/keycloak/releases/download/26.8.2/keycloak-26.8.2.tar.gz \
+            -o "$RUNNER_TEMP/keycloak-26.8.2.tar.gz"
+          printf '%s  %s\n' dd124787283918bc597628887168333465ee2a811a389e0003569e52be7e487f \
+            "$RUNNER_TEMP/keycloak-26.8.2.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/keycloak-26.8.2.tar.gz" -C "$RUNNER_TEMP"
+      - name: Run the real Keycloak and DSS acceptance suite
+        run: |
+          python examples/acceptance/run.py \
+            --keycloak-home "$RUNNER_TEMP/keycloak-26.8.2" \
+            --keycloak-java-home "$JAVA_HOME"

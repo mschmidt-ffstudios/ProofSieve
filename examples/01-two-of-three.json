@@ -1,0 +1,121 @@
+{
+  "id": "01-two-of-three",
+  "title": "Approve a payment with at least two of three distinct signers",
+  "appliesTo": {
+    "format": "cms-detached",
+    "type": "payment-order-v1"
+  },
+  "checks": [
+    {
+      "id": "count-allowed-signers",
+      "kind": "distinct-signatures",
+      "fact": "uv:validAllowedSignerCount",
+      "configuration": {
+        "requireSameArtifact": true,
+        "countBy": "verifiedSignerId",
+        "signers": [
+          {
+            "id": "urn:demo:signer:anna",
+            "displayName": "Anna",
+            "method": "local-x509",
+            "trustProfile": "demo-finance-ca"
+          },
+          {
+            "id": "urn:demo:signer:ben",
+            "displayName": "Ben",
+            "method": "external",
+            "connector": {
+              "endpoint": "https://partner.example/verify",
+              "authentication": "configured-service-identity",
+              "requireResponseFields": ["verifiedSignerId", "artifactDigest", "signatureValid"],
+              "bindToRequest": true
+            }
+          },
+          {
+            "id": "urn:demo:signer:cem",
+            "displayName": "Cem",
+            "method": "local-x509",
+            "trustProfile": "demo-revision-ca"
+          }
+        ]
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {"uv": "https://proofsieve.example/vocab/"}
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/01-two-of-three",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/payment-order",
+        "action": "uv:approve",
+        "constraint": [
+          {"leftOperand": "uv:validAllowedSignerCount", "operator": "gteq", "rightOperand": 2}
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "link",
+    "targetTemplate": "https://payments.example/continue/{continuation}"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "simulatedContinuation": "example-request-1042",
+      "facts": {"uv:validAllowedSignerCount": 2},
+      "simulatedSignerResults": [
+        {"signerId": "urn:demo:signer:anna", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:ben", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:cem", "result": "missing"}
+      ],
+      "expected": {
+        "valid": true,
+        "forwarded": false,
+        "response": {"valid": true, "redirectUrl": "https://payments.example/continue/example-request-1042"}
+      },
+      "reason": "Anna and Ben each proved a signature on the same payment order. The third signature is optional."
+    },
+    {
+      "id": "allow-all-three",
+      "facts": {"uv:validAllowedSignerCount": 3},
+      "simulatedSignerResults": [
+        {"signerId": "urn:demo:signer:anna", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:ben", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:cem", "result": "valid", "sameArtifact": true}
+      ],
+      "expected": {"valid": true, "forwarded": false},
+      "reason": "The threshold is at least two. A valid third signature also satisfies the rule."
+    },
+    {
+      "id": "deny-duplicate-signer",
+      "facts": {"uv:validAllowedSignerCount": 1},
+      "simulatedSignerResults": [
+        {"signerId": "urn:demo:signer:anna", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:anna", "result": "valid", "sameArtifact": true}
+      ],
+      "expected": {"valid": false, "forwarded": false, "response": {"valid": false}},
+      "reason": "Two signatures from Anna contribute one distinct approved signer."
+    },
+    {
+      "id": "deny-different-artifact",
+      "facts": {"uv:validAllowedSignerCount": 1},
+      "simulatedSignerResults": [
+        {"signerId": "urn:demo:signer:anna", "result": "valid", "sameArtifact": true},
+        {"signerId": "urn:demo:signer:ben", "result": "valid", "sameArtifact": false}
+      ],
+      "expected": {"valid": false, "forwarded": false, "response": {"valid": false}},
+      "reason": "Ben's signature is valid for a different artifact and is excluded from this request."
+    }
+  ],
+  "sources": [
+    "https://www.rfc-editor.org/rfc/rfc5652.html#section-5",
+    "https://www.rfc-editor.org/rfc/rfc5280",
+    "https://www.w3.org/TR/odrl-model/#constraint",
+    "https://www.w3.org/TR/odrl-vocab/#term-gteq"
+  ]
+}

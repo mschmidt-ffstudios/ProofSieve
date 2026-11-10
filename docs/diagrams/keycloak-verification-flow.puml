@@ -1,0 +1,60 @@
+@startuml
+title ProofSieve | Verify a supplier operation with Keycloak
+hide footbox
+
+participant "Supplier portal" as Portal
+participant Keycloak as KC
+participant ProofSieve as PS
+participant "Configured DSS bridge, remote\nverifier or OCSP responder" as Ext
+database "Decision evidence" as Evidence
+
+Portal -> KC: Request an access token for proofsieve-api\n(OAuth 2.0 client credentials)
+KC --> Portal: Access token with proofsieve-api audience\nand mapped verifier role
+Portal -> PS: POST to the granted verification path over HTTPS
+note over Portal, PS
+  Authorization header carries the access token.
+  The request body contains operationId and data.
+  The saved profile defines the input for each path.
+  Example: /verify/supplier-orders uses a signed credential.
+  Example: /verify/order-approval uses a document and proofs.
+end note
+PS -> PS: Validate the token and check endpoint permission
+
+alt Token invalid or endpoint permission missing
+    PS --> Portal: 401 for an invalid token or\n403 for missing endpoint permission
+    Portal -> Portal: Keep the order blocked
+else Endpoint access granted
+    alt Issuer-signed credential profile
+        PS -> PS: Check signature and claims using configured issuer trust
+    else Document signature profile
+        loop For each configured signer with a submitted proof
+            alt Local detached signature
+                PS -> PS: Verify the signature over the submitted bytes
+            else DSS or compatible remote verifier
+                PS -> Ext: Validate the document and any detached proof
+                Ext --> PS: Verdict with request bindings and report reference
+                PS -> PS: Validate the response and match it to the request
+            else Local signature with OCSP
+                PS -> PS: Verify the local signature
+                opt Local signature valid
+                    PS -> Ext: Request certificate status with a fresh nonce
+                    Ext --> PS: Signed status response
+                    PS -> PS: Check issuer signature, certificate binding and freshness
+                end
+            end
+        end
+        PS -> PS: Count confirmed signers for the submitted document
+    end
+
+    PS -> PS: Evaluate ODRL when checks pass\nOtherwise derive refusal or indeterminate
+    PS -> Evidence: Store the outcome with caller, operation and rule version
+    alt Evidence stored
+        Evidence --> PS: Decision ID
+        PS --> Portal: Recorded decision with operation and decision IDs
+        Portal -> Portal: Release only the matching operation\nwith an allow outcome, once
+    else Evidence unavailable
+        PS --> Portal: HTTP 503 · evidence_unavailable
+        Portal -> Portal: Keep the order blocked
+    end
+end
+@enduml

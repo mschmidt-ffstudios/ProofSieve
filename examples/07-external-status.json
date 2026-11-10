@@ -1,0 +1,131 @@
+{
+  "id": "07-external-status",
+  "title": "Require a fresh, verified revocation status",
+  "appliesTo": {
+    "format": "w3c-vc-data-integrity",
+    "type": "SupplierCredential"
+  },
+  "checks": [
+    {
+      "id": "credential-integrity",
+      "kind": "vc-data-integrity",
+      "fact": "uv:credentialProofValid",
+      "configuration": {
+        "trustedIssuer": "did:web:issuer.example",
+        "requireValidProof": true
+      }
+    },
+    {
+      "id": "revocation-status",
+      "kind": "bitstring-status-list",
+      "fact": "uv:credentialRevocationStatus",
+      "configuration": {
+        "entryType": "BitstringStatusListEntry",
+        "statusPurpose": "revocation",
+        "approvedHosts": [
+          "status.example"
+        ],
+        "trustedStatusListIssuer": "did:web:issuer.example",
+        "requireVerifiedStatusList": true,
+        "honorStatusListValidityAndTtl": true,
+        "maxCacheAgeSeconds": 300,
+        "timeoutMs": 2000
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/07-external-status",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/supplier-submission",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:credentialProofValid",
+            "operator": "eq",
+            "rightOperand": true
+          },
+          {
+            "leftOperand": "uv:credentialRevocationStatus",
+            "operator": "eq",
+            "rightOperand": "not-revoked"
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "boolean"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:credentialProofValid": true,
+        "uv:credentialRevocationStatus": "not-revoked"
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": false
+      },
+      "reason": "The verified status list indicates the credential has not been revoked."
+    },
+    {
+      "id": "deny-revoked",
+      "facts": {
+        "uv:credentialProofValid": true,
+        "uv:credentialRevocationStatus": "revoked"
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The verified status list marks the credential revoked."
+    },
+    {
+      "id": "deny-invalid-proof",
+      "facts": {
+        "uv:credentialProofValid": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The credential proof did not validate."
+    },
+    {
+      "id": "deny-status-timeout",
+      "facts": {
+        "uv:credentialProofValid": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The status endpoint timed out and no usable cached list was available."
+    },
+    {
+      "id": "deny-unverified-list",
+      "facts": {
+        "uv:credentialProofValid": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The status list proof or issuer could not be verified."
+    }
+  ],
+  "sources": [
+    "https://www.w3.org/TR/vc-data-model-2.0/#status",
+    "https://www.w3.org/TR/vc-bitstring-status-list/"
+  ]
+}

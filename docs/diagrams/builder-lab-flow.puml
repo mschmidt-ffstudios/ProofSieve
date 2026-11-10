@@ -1,0 +1,49 @@
+@startuml
+title ProofSieve · Prepare inputs and explore worked examples
+skinparam activityDiamondBackgroundColor #EEF3FA
+
+start
+if (What do you want to do?) then (Verify an input)
+    partition "Credential Builder" {
+        :Choose a template or import a file;
+        if (Open the matching signed demo?) then (Yes)
+            :Open the demo in a separate Guard tab\nand keep the Builder draft;
+        else (Editable input)
+            :Edit unsigned JSON facts or RDF Turtle;
+            :Preview the request body or export the input;
+            :Send to Guard in the same tab;
+        endif
+    }
+    partition "Guard · Verifier" {
+        :Sign in and load granted endpoints\nand their input profiles;
+        :Select an endpoint;
+        if (A Builder handoff is pending?) then (Yes)
+            if (Does the format match?) then (Yes)
+                :Load the exact Builder input;
+            else (No)
+                :Keep the input pending and disable verification;
+                if (Use the pending input?) then (Yes)
+                    :Select a compatible granted endpoint\nand load the exact Builder input;
+                else (Discard)
+                    :Discard the handoff and enter suitable input;
+                endif
+            endif
+        else (Signed demo)
+            :Use the original at its matching granted path\nor deliberately select another endpoint;
+        endif
+        if (Recorded decision endpoint?) then (Yes)
+            :Enter a stable operation reference;
+        endif
+        :Click Verify on server;
+        :POST to the selected path and show\nthe server result and any delivery state;
+    }
+else (Explore a worked rule)
+    partition "Verification Lab · Browser simulation" {
+        :Select one of ten examples and a synthetic case;
+        :Edit the rule and inspect the connected graph;
+        :Read simulated evidence and API response;
+        :Export the edited policy and settings;
+    }
+endif
+stop
+@enduml

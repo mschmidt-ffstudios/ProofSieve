@@ -1,0 +1,30 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    {"field": "https://proofsieve.example/facts/"}
+  ],
+  "@type": "Set",
+  "uid": "urn:proofsieve:example:supplier-portal",
+  "profile": "https://proofsieve.example/profiles/basic/v1",
+  "permission": [
+    {
+      "target": "urn:proofsieve:example:supplier-portal:orders",
+      "action": "use",
+      "constraint": [
+        {"leftOperand": "field:vct", "operator": "eq", "rightOperand": "urn:proofsieve:example:supplier-access:v1"},
+        {"leftOperand": "field:supplier_status", "operator": "eq", "rightOperand": "active"},
+        {
+          "or": [
+            {"leftOperand": "field:role", "operator": "eq", "rightOperand": "procurement"},
+            {
+              "and": [
+                {"leftOperand": "field:role", "operator": "eq", "rightOperand": "reviewer"},
+                {"leftOperand": "field:mfa_enrolled", "operator": "eq", "rightOperand": true}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

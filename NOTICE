@@ -1,0 +1,22 @@
+ProofSieve
+
+The ProofSieve source and original documentation are licensed under Apache-2.0.
+
+The EUDI mdoc examples derive from the EUDI Wallet OpenID4VP reference library.
+The fixture and its projection retain the upstream Apache-2.0 terms.
+See examples/signed/README.md and examples/signed/LICENSE-EUDI-OPENID4VP.txt.
+
+The SD-JWT examples derived from RFC 9901 use the IETF Trust Revised BSD terms
+for extracted code components. See examples/signed/LICENSE-RFC9901.txt.
+Additional standards and example sources are listed in examples/credentials/README.md.
+
+The optional Java acceptance bridge resolves European Commission Digital
+Signature Services (DSS) separately under its LGPL-2.1 license. ProofSieve's
+wheel and source archive contain no DSS binaries.
+See https://github.com/esig/dss/blob/master/LICENSE.
+
+The API Explorer includes the upstream Swagger UI distribution from SmartBear
+Software under Apache-2.0. The original distribution's license, notice and
+extracted third-party license comments accompany the vendored assets in
+apps/api-docs/vendor/. The supplemental component inventory and license texts
+are in apps/api-docs/vendor/THIRD-PARTY.LICENSE.txt.

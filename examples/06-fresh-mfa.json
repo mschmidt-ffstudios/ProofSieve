@@ -1,0 +1,126 @@
+{
+  "id": "06-fresh-mfa",
+  "title": "Require recent multi-factor authentication",
+  "appliesTo": {
+    "format": "oidc-session-context",
+    "type": "authentication-session"
+  },
+  "checks": [
+    {
+      "id": "session-mfa",
+      "kind": "oidc-session-assurance",
+      "fact": "uv:mfaVerified",
+      "configuration": {
+        "trustedIssuer": "https://login.example",
+        "audience": "proofsieve-demo",
+        "trustedAcrValues": [
+          "urn:proofsieve:demo:acr:mfa"
+        ],
+        "requireVerifiedSignatureAndSessionBinding": true
+      }
+    },
+    {
+      "id": "authentication-age",
+      "kind": "oidc-authentication-age",
+      "fact": "uv:authenticationAgeSeconds",
+      "configuration": {
+        "claim": "auth_time",
+        "clock": "verifier",
+        "requireVerifiedSession": true,
+        "rejectFutureAuthenticationTime": true
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/06-fresh-mfa",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/sensitive-operation",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:mfaVerified",
+            "operator": "eq",
+            "rightOperand": true
+          },
+          {
+            "leftOperand": "uv:authenticationAgeSeconds",
+            "operator": "gteq",
+            "rightOperand": 0
+          },
+          {
+            "leftOperand": "uv:authenticationAgeSeconds",
+            "operator": "lteq",
+            "rightOperand": 300
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "forward",
+    "destination": "https://payments.example/approved-operations",
+    "payload": "approved-operation-body"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:mfaVerified": true,
+        "uv:authenticationAgeSeconds": 120
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": true
+      },
+      "reason": "The trusted session established MFA within the last five minutes."
+    },
+    {
+      "id": "deny-stale-mfa",
+      "facts": {
+        "uv:mfaVerified": true,
+        "uv:authenticationAgeSeconds": 301
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The authentication event is older than five minutes."
+    },
+    {
+      "id": "deny-no-mfa",
+      "facts": {
+        "uv:mfaVerified": false,
+        "uv:authenticationAgeSeconds": 120
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The trusted session does not establish the required MFA assurance."
+    },
+    {
+      "id": "deny-missing-auth-time",
+      "facts": {
+        "uv:mfaVerified": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "Without a verified auth_time, freshness cannot be established."
+    }
+  ],
+  "sources": [
+    "https://openid.net/specs/openid-connect-core-1_0.html#IDToken",
+    "https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest"
+  ]
+}

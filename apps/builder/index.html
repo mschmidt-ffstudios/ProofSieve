@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de" data-en-title="ProofSieve · Credential Builder">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProofSieve · Credential Builder</title>
+  <link rel="stylesheet" href="../shared/form.css">
+  <link rel="stylesheet" href="../shared/language.css">
+  <link rel="stylesheet" href="./builder.css">
+  <script type="module" src="./builder.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/apps/">ProofSieve</a>
+    <nav aria-label="Anwendungen" data-en-aria-label="Applications">
+      <a href="/apps/" data-en="Overview">Übersicht</a>
+      <a href="/apps/guard/">Guard</a>
+      <a href="/apps/builder/" aria-current="page">Credential Builder</a>
+      <a href="/apps/lab/" data-en="Verification Lab">Prüflabor</a>
+      <a href="/apps/api-docs/">Swagger UI</a>
+      <select data-language aria-label="Sprache / Language">
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select>
+    </nav>
+  </header>
+  <main>
+    <div class="intro">
+      <div>
+        <p class="eyebrow" data-en="Prepare verification input">Prüfinput vorbereiten</p>
+        <h1>Credential Builder</h1>
+        <p data-en="Create and edit test data from a template, then open it in the Guard.">Testdaten aus einer Vorlage erstellen, bearbeiten und an den Guard übergeben.</p>
+      </div>
+      <span class="endpoint" data-en="Unsigned test data">Unsignierte Testdaten</span>
+    </div>
+    <p id="builder-status" class="status" role="status" data-state="info">Wähle eine Vorlage oder bearbeite die Eingabe direkt.</p>
+    <div class="work builder-work">
+      <section class="panel" aria-labelledby="input-heading">
+        <header><span class="step">01</span><h2 id="input-heading" data-en="Create input">Eingabe erstellen</h2></header>
+        <div class="panel-body">
+          <label><span data-en="Template">Vorlage</span>
+            <select id="builder-preset">
+              <option value="status" data-en="Status · JSON for ODRL">Status · JSON für ODRL</option>
+              <option value="credential" data-en="Test credential · JSON for ODRL">Test-Credential · JSON für ODRL</option>
+              <option value="turtle" data-en="Status graph · Turtle for SHACL">Statusgraph · Turtle für SHACL</option>
+              <optgroup id="builder-samples" label="Credential-Beispiele mit Quelle" hidden></optgroup>
+            </select>
+          </label>
+          <p id="builder-samples-load-error" class="muted" data-en="The credential examples could not be loaded." hidden>Die Credential-Beispiele konnten nicht geladen werden.</p>
+          <p id="builder-preset-help" class="muted"></p>
+          <div id="builder-sample-details" class="builder-sample-details" hidden>
+            <p><strong data-en="Format">Format</strong> <span id="builder-sample-format"></span></p>
+            <p><strong data-en="Source">Quelle</strong> <a id="builder-sample-source" target="_blank" rel="noopener noreferrer"></a></p>
+            <p><strong data-en="ODRL condition">ODRL-Bedingung</strong> <code id="builder-sample-condition"></code></p>
+            <div class="actions">
+              <button id="builder-sample-original" type="button" data-en="Load example">Beispiel laden</button>
+              <button id="builder-sample-negative" type="button" data-en="Load counterexample">Gegenprobe laden</button>
+            </div>
+          </div>
+          <form id="builder-form" class="builder-form">
+            <div id="builder-fields" class="builder-fields"></div>
+            <div class="actions">
+              <button type="submit" data-en="Apply values to input">Werte in Eingabe übernehmen</button>
+              <button id="builder-discard-fields" type="button" data-en="Discard template changes" hidden>Vorlagenänderungen verwerfen</button>
+            </div>
+            <p id="builder-pending" class="muted" role="status" data-en="Template changes are pending. Apply them to replace the input, or discard them to keep the current input." hidden>Vorlagenänderungen sind offen. Übernimm sie, um den Prüfinput zu ersetzen, oder verwirf sie, um ihn zu behalten.</p>
+          </form>
+          <label id="builder-input-label" for="builder-input">Prüfinput als JSON</label>
+          <textarea id="builder-input" rows="11" maxlength="65536" spellcheck="false" aria-describedby="builder-input-help"></textarea>
+          <p id="builder-input-help" class="muted"></p>
+          <label><span data-en="Load input from a file">Datei als Prüfinput laden</span>
+            <input id="builder-import" type="file" accept=".json,.ttl,application/json,text/turtle">
+          </label>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="preview-heading">
+        <header><span class="step">02</span><h2 id="preview-heading" data-en="Preview and handoff">Vorschau und Übergabe</h2></header>
+        <div class="panel-body">
+          <div id="builder-sample-check" class="builder-sample-check" hidden>
+            <p class="muted" data-en="This example shows extracted JSON fields. The server checks those fields against the example rule. For signature, issuer trust and revocation checks, use a Guard endpoint configured for the signed credential format.">Dieses Beispiel zeigt extrahierte JSON-Felder. Der Server prüft sie gegen die Beispielregel. Für Signatur, Ausstellervertrauen und Widerruf nutze einen Guard-Endpunkt, der für das signierte Format eingerichtet ist.</p>
+            <div id="builder-sample-signed" hidden>
+              <a id="builder-sample-signed-link" target="_blank" rel="noopener noreferrer" aria-describedby="builder-sample-signed-help" data-en="Open signed example in Guard">Signiertes Beispiel im Guard öffnen</a>
+              <p id="builder-sample-signed-help" class="muted" data-en="Guard loads a separate signed credential in a new tab. Your edits stay here.">Der Guard lädt in einem neuen Tab ein separat signiertes Credential. Deine Änderungen bleiben hier.</p>
+            </div>
+            <div id="builder-sample-auth" hidden>
+              <label for="builder-sample-token" data-en="Admin access token">Admin-Zugriffstoken</label>
+              <input id="builder-sample-token" type="password" maxlength="43" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="builder-sample-auth-help">
+              <p id="builder-sample-auth-help" class="muted" data-en="Enter an admin token with access to all endpoints for each example check. The field clears when you submit it.">Gib für jede Beispielprüfung einen Admin-Token mit Zugriff auf alle Endpunkte ein. Beim Start der Prüfung wird das Feld geleert.</p>
+              <button id="builder-sample-clear-token" type="button" data-en="Clear token">Token entfernen</button>
+            </div>
+            <div class="actions">
+              <button id="builder-sample-run" type="button" class="primary" data-en="Check JSON fields against the example rule">JSON-Felder gegen Beispielregel prüfen</button>
+            </div>
+            <div class="result" role="status" aria-atomic="true">
+              <div class="result-title">
+                <strong id="builder-sample-message"></strong>
+                <code id="builder-sample-response"></code>
+              </div>
+              <p id="builder-sample-error" class="muted" hidden></p>
+            </div>
+          </div>
+          <p id="builder-preview-help" class="muted" data-en="The Guard sends this content when you start verification there.">Der Guard sendet diesen Inhalt erst, wenn du dort die Prüfung startest.</p>
+          <div class="result builder-result">
+            <div class="result-title"><strong data-en="API request">API-Anfrage</strong><code id="builder-size"></code></div>
+            <pre id="builder-preview" aria-label="Vorschau der API-Anfrage" data-en-aria-label="API request preview"></pre>
+          </div>
+          <div class="actions">
+            <button id="builder-save" type="button" aria-describedby="builder-draft-note" data-en="Save draft locally">Entwurf lokal speichern</button>
+            <button id="builder-delete-draft" type="button" aria-describedby="builder-draft-note" data-en="Delete saved draft" hidden>Gespeicherten Entwurf löschen</button>
+            <button id="builder-export" type="button" data-en="Download input">Eingabe herunterladen</button>
+          </div>
+          <p id="builder-draft-note" class="muted" data-en="Save only synthetic test data. Anyone using the same browser profile can reopen the saved draft.">Speichere nur synthetische Testdaten. Andere Personen können den Entwurf im selben Browserprofil wieder öffnen.</p>
+          <div class="builder-handoff">
+            <button id="builder-handoff" type="button" class="primary" data-en="Open input in the Guard">Eingabe im Guard öffnen</button>
+            <p class="muted" data-en="The Guard opens in this tab. Select the endpoint whose saved rule you want to apply.">Die Übergabe öffnet den Guard in diesem Tab. Dort wählst du den Endpunkt mit der gespeicherten Regel für deine Prüfung.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

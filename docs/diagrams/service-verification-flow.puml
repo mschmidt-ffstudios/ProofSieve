@@ -1,0 +1,82 @@
+@startuml
+title ProofSieve | Integrate a verification endpoint
+hide footbox
+
+actor "API caller" as Caller
+participant "Keycloak" as KC
+participant "ProofSieve Guard" as Guard
+participant "Configured check\nservice" as Check
+database "Decision\nevidence" as Evidence
+
+opt Keycloak service account is configured
+    Caller -> KC: Request a token via client credentials
+    KC --> Caller: Access token with the API audience\nand the endpoint role
+end
+note over Caller
+  A configured opaque ProofSieve
+  bearer token is also supported.
+end note
+
+opt Discover and try permitted endpoints
+    Caller -> Guard: GET /openapi.json with bearer token
+    Guard --> Caller: Contract scoped to the caller's grants
+    note over Caller, Guard
+      Swagger UI on the operator listener uses this contract
+      to show request examples and send explicit test calls.
+    end note
+end
+
+Caller -> Guard: POST to the selected /verify path with bearer and data\nInclude operationId in decision mode
+Guard -> Guard: Authenticate and authorize the exact path
+alt Invalid token or missing grant
+    Guard --> Caller: HTTP 401 or 403
+else Ordinary verification with a stale If-Match
+    Guard --> Caller: HTTP 412 · reload the rule before retrying
+else Authorized
+    Guard -> Guard: Load the saved rule and input profile
+    alt JSON facts or RDF Turtle
+        Guard -> Guard: Use JSON for ODRL or Turtle for SHACL
+    else SD-JWT VC, mdoc IssuerSigned or W3C VC
+        Guard -> Guard: Verify issuer signature and integrity\nwith configured trust
+    else Document signatures or seal
+        opt Local check enabled for this profile
+            Guard -> Guard: Verify document signatures locally
+        end
+        opt External check enabled for this profile
+            Guard -> Check: Send required check data\nfor DSS or another configured check
+            Check --> Guard: Check result or status
+            Guard -> Guard: Validate and bind result to the input
+        end
+    else Proof bundle
+        Guard -> Guard: Verify each configured input and check\ncross-proof and operation bindings
+    end
+    Guard -> Guard: Evaluate the saved rule when checks pass\nOtherwise derive refusal or indeterminate
+    alt Recorded decision mode
+        Guard -> Evidence: Record operation, rule version,\ncaller, outcome and check evidence
+        alt Evidence stored
+            Evidence --> Guard: Decision ID
+            Guard --> Caller: Recorded outcome with decision ID
+        else Evidence unavailable
+            Guard --> Caller: HTTP 503 · evidence_unavailable
+        end
+    else Boolean, Guard or URL mode
+        Guard --> Caller: Result in the configured mode
+    end
+end
+
+opt Decision recorded and export enabled on the operator listener
+    Caller -> Guard: GET /evidence with the same caller,\nendpoint and operationId\nOptional decisionId selects one record
+    Guard -> Evidence: Read scoped evidence and sign the export
+    Guard --> Caller: Signed JSON decision evidence
+end
+
+legend bottom
+  |= Response mode |= Typical result |
+  | Boolean | HTTP 200 with true or false |
+  | Guard | HTTP 200 for approval or 403 for policy refusal |
+  | URL | JSON decision and optional return or fail URL for the caller to use |
+  | Decision | Outcome, operation ID, decision ID and rule version. HTTP 503 if indeterminate |
+  | Decision with forwarding | See approved-forwarding-flow.puml for delivery outcomes |
+  | Wallet presentation | See wallet-evidence-flow.puml for start, completion and recovery |
+endlegend
+@enduml

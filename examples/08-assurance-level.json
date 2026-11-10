@@ -1,0 +1,125 @@
+{
+  "id": "08-assurance-level",
+  "title": "Require substantial or higher assurance within the eIDAS scheme",
+  "appliesTo": {
+    "format": "saml-assertion",
+    "type": "authentication-assurance",
+    "scheme": "eidas"
+  },
+  "checks": [
+    {
+      "id": "eidas-assertion",
+      "kind": "saml-assertion-verification",
+      "fact": "uv:eidasAssertionVerified",
+      "configuration": {
+        "trustedIssuer": "https://eidas-node.example",
+        "metadata": "operator-configured eIDAS node metadata",
+        "audience": "https://relying-party.example",
+        "requireSignature": true,
+        "requireRequestBinding": true,
+        "requireTemporalValidity": true,
+        "rejectReplay": true
+      }
+    },
+    {
+      "id": "eidas-assurance-rank",
+      "kind": "scheme-specific-assurance-rank",
+      "fact": "uv:eidasAssuranceRank",
+      "configuration": {
+        "claim": "AuthnContextClassRef",
+        "requireVerifiedEidasAssertion": true,
+        "rankByIdentifier": {
+          "http://eidas.europa.eu/LoA/low": 1,
+          "http://eidas.europa.eu/LoA/substantial": 2,
+          "http://eidas.europa.eu/LoA/high": 3
+        },
+        "unknownIdentifier": "omit-fact",
+        "crossSchemeMapping": false
+      }
+    }
+  ],
+  "odrl": {
+    "@context": [
+      "http://www.w3.org/ns/odrl.jsonld",
+      {
+        "uv": "https://proofsieve.example/vocab/"
+      }
+    ],
+    "@type": "Set",
+    "uid": "https://proofsieve.example/rules/08-assurance-level",
+    "profile": "https://proofsieve.example/profiles/verification/v1",
+    "permission": [
+      {
+        "target": "https://proofsieve.example/resources/eidas-assurance-gated-operation",
+        "action": "uv:approve",
+        "constraint": [
+          {
+            "leftOperand": "uv:eidasAssertionVerified",
+            "operator": "eq",
+            "rightOperand": true
+          },
+          {
+            "leftOperand": "uv:eidasAssuranceRank",
+            "operator": "gteq",
+            "rightOperand": 2
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "mode": "boolean"
+  },
+  "cases": [
+    {
+      "id": "allow",
+      "facts": {
+        "uv:eidasAssertionVerified": true,
+        "uv:eidasAssuranceRank": 2
+      },
+      "expected": {
+        "valid": true,
+        "forwarded": false
+      },
+      "reason": "The verified eIDAS assertion carries the substantial assurance identifier."
+    },
+    {
+      "id": "deny-low-assurance",
+      "facts": {
+        "uv:eidasAssertionVerified": true,
+        "uv:eidasAssuranceRank": 1
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "The verified eIDAS assertion carries the low assurance identifier."
+    },
+    {
+      "id": "deny-foreign-scheme",
+      "facts": {
+        "uv:eidasAssertionVerified": true
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "A different scheme has no rank in the eIDAS identifier table."
+    },
+    {
+      "id": "deny-untrusted-assertion",
+      "facts": {
+        "uv:eidasAssertionVerified": false
+      },
+      "expected": {
+        "valid": false,
+        "forwarded": false
+      },
+      "reason": "An assertion from an untrusted issuer cannot establish an eIDAS assurance rank."
+    }
+  ],
+  "sources": [
+    "https://eur-lex.europa.eu/eli/reg_impl/2015/1502/oj/eng",
+    "https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467109280/eIDAS%2BeID%2BProfile"
+  ]
+}

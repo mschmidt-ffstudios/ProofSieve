@@ -1,0 +1,11 @@
+select[data-language] {
+  width: auto;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 3px 6px;
+  border: 1px solid #b9cce4;
+  border-radius: 6px;
+  background: #f8fbff;
+  color: #172a46;
+  font: 650 .82rem/1.3 system-ui, sans-serif;
+}

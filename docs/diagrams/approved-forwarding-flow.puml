@@ -1,0 +1,53 @@
+@startuml
+title ProofSieve | Deliver an approved operation
+hide footbox
+
+actor "Authorized caller" as Caller
+participant "ProofSieve Guard" as Guard
+database "Decision and\ndelivery journal" as Journal
+participant "Fixed HTTPS\nreceiver" as Receiver
+
+Caller -> Guard: POST to a configured decision endpoint\nwith data and operationId
+Guard -> Guard: Match original request bytes to the parsed input\nand evaluate the saved rule
+alt Denied or indeterminate
+    Guard -> Journal: Record the decision
+    alt Decision recorded
+        Journal --> Guard: Decision ID
+        Guard --> Caller: HTTP 403 or 503 · not_forwarded
+    else Journal unavailable
+        Guard --> Caller: HTTP 503 · evidence_unavailable
+    end
+else Approved
+    Guard -> Journal: Match the existing operation or atomically\nrecord approval and reserve delivery
+    alt Same key with different approved input
+        Guard --> Caller: HTTP 409 · operation_conflict
+    else Matching reservation and retained decision
+        Guard --> Caller: Original decision ID and rule version\nwith current delivery state
+    else Matching reservation and expired decision
+        Guard --> Caller: HTTP 409 · operation_evidence_expired
+    else Journal unavailable
+        Guard --> Caller: HTTP 503 · evidence_unavailable
+    else New reservation
+        Journal --> Guard: New decision and pending delivery IDs
+        Guard -> Receiver: One POST with the original JSON bytes\nService bearer and Idempotency-Key
+        alt Receiver acknowledges with 2xx
+            Receiver --> Guard: HTTP 2xx
+            Guard -> Journal: Record delivered and receiver status
+            Guard --> Caller: HTTP 200 · delivered
+        else Receiver returns 3xx through 5xx
+            Receiver --> Guard: HTTP 3xx–5xx
+            Guard -> Journal: Record rejected and receiver status
+            Guard --> Caller: HTTP 502 · rejected
+        else No confirmed response
+            Guard -> Journal: Record unknown
+            Guard --> Caller: HTTP 503 · unknown
+        end
+    end
+end
+
+note over Guard, Journal
+  If the final journal write fails, the caller receives
+  HTTP 503 / unknown. The prior reservation blocks
+  automatic retransmission.
+end note
+@enduml

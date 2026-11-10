@@ -1,0 +1,56 @@
+@startuml
+title ProofSieve | Runtime architecture
+left to right direction
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam defaultFontName SansSerif
+skinparam defaultFontColor #15283F
+skinparam ArrowColor #526B8A
+skinparam ComponentBorderColor #8CA6C9
+skinparam ComponentBackgroundColor #EDF4FC
+skinparam componentStyle rectangle
+
+actor "Administrator / verifier" as Operator
+actor "Integrating service" as Client
+cloud "Optional Keycloak\nOAuth issuer and JWKS" as KC
+
+rectangle "Shared deployment boundary" {
+  component "SSH tunnel\nOperator socket" as SSH
+  component "HTTPS reverse proxy\nAPI-only socket" as Ingress
+  package "ProofSieve process" {
+    component "Operator UI and API\nGuard, Builder, Lab, Swagger\nAdmin, verification and signed evidence" as UI
+    component "Integration API\nScoped OpenAPI and verification" as API
+    component "Guard\nExact access grants\nInput profiles and policy decisions" as Guard
+  }
+  package "Private files and databases" {
+    database "Rules and private\nconnector configuration" as Rules
+    database "Decision evidence\nand delivery journal" as Evidence
+    database "Wallet session and\ncompletion journal" as Sessions
+  }
+}
+
+component "Configured check service\nDSS or status responder" as Checks
+component "Selected wallet verifier\nEUDI Reference Verifier or Credo" as Wallet
+component "Configured HTTPS receiver" as Receiver
+
+Operator --> SSH
+SSH --> UI
+Client --> Ingress : access token and request
+Ingress --> API
+Client -[dashed]down-> KC : client credentials
+API --> Guard
+UI --> Guard
+Guard ..> KC : validate service token using JWKS
+Guard --> Rules
+Guard --> Evidence : recorded decision / signed export
+Guard --> Sessions : wallet state and recovery
+Guard ..> Checks : configured checks
+Guard ..> Wallet : presentation verification
+Guard ..> Receiver : approved requests only
+
+legend bottom
+  Solid edges show service paths and state access. Dashed edges show optional integrations.
+  The API listener excludes administration, UI, signed evidence and bundled demo routes.
+  The local reference setup can use a loopback listener in place of the two sockets.
+endlegend
+@enduml
