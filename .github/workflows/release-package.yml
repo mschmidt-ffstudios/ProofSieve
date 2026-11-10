@@ -1,0 +1,99 @@
+name: Release package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Install Nginx for the ingress check
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends nginx
+      - name: Build, install and verify the release package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          commit=$(git rev-parse HEAD)
+          test "$commit" = "$(git rev-parse "$GITHUB_SHA^{commit}")"
+          test -z "$(git ls-files -- internal instance .gitea release-artifacts)"
+
+          version=$(jq -er '.info.version' openapi.json)
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            test "$GITHUB_REF_NAME" = "v$version"
+          fi
+          wheel="proofsieve-$version-py3-none-any.whl"
+          source="proofsieve-$version.tar.gz"
+          kit="proofsieve-$version-linux-x86_64-py312-service.tar.gz"
+          lock="requirements-linux-x86_64-py312.txt"
+          release="$RUNNER_TEMP/proofsieve-release"
+          work=$(mktemp -d "$RUNNER_TEMP/proofsieve-package.XXXXXXXX")
+
+          python -m pip install build==1.6.1 pip-audit==2.10.1
+          python -m build --outdir "$release"
+          test -s "$release/$wheel"
+          test -s "$release/$source"
+
+          python -m venv "$work/resolved"
+          resolver="$work/resolved/bin/python"
+          "$resolver" -m pip install --only-binary=:all: "$release/$wheel"
+          "$resolver" -m pip freeze --exclude proofsieve > "$work/runtime.txt"
+          mkdir "$work/wheels"
+          "$resolver" -m pip download --only-binary=:all: --no-deps \
+            --dest "$work/wheels" -r "$work/runtime.txt"
+          python examples/acceptance/lock_runtime.py "$work/runtime.txt" "$work/wheels" > "$work/$lock"
+
+          python -m venv "$work/installed"
+          installed="$work/installed/bin/python"
+          "$installed" -m pip install --require-hashes --only-binary=:all: --no-index \
+            --find-links "$work/wheels" -r "$work/$lock"
+          "$installed" -m pip install --no-deps --no-index "$release/$wheel"
+          "$installed" -m pip check
+          python -m pip_audit --strict --no-deps --disable-pip -r "$work/runtime.txt"
+          "$installed" tests/smoke_installed.py "$release/$wheel" "$release/$source"
+          "$installed" -m tests.deploy_ingress --proofsieve "$work/installed/bin/proofsieve" \
+            --nginx "$(command -v nginx)"
+
+          jq -n --arg commit "$commit" --arg ref "$GITHUB_REF" \
+            --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg wheel "$wheel" --arg source "$source" --arg lock "$lock" \
+            --arg wheel_hash "$(sha256sum < "$release/$wheel" | cut -d ' ' -f 1)" \
+            --arg source_hash "$(sha256sum < "$release/$source" | cut -d ' ' -f 1)" \
+            --arg lock_hash "$(sha256sum < "$work/$lock" | cut -d ' ' -f 1)" \
+            '{schemaVersion: 1, commit: $commit, ref: $ref, runId: $run, attempt: $attempt,
+              sha256: {($wheel): $wheel_hash, ($source): $source_hash, ($lock): $lock_hash}}' \
+            > "$work/candidate.json"
+          jq -n --arg python "$("$installed" --version)" --arg nginx "$(nginx -v 2>&1)" \
+            '{platform: "Ubuntu 24.04 x86_64", python: $python, nginx: $nginx}' \
+            > "$work/runtime.json"
+
+          bash deploy/build-service-kit.sh "$release" "$work" "$release/$kit"
+          cd "$release"
+          sha256sum "$kit" "$wheel" "$source" > SHA256SUMS
+          sha256sum --check SHA256SUMS
+      - name: Upload the verified package and checksums
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: proofsieve-release-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/proofsieve-release/proofsieve-*.whl
+            ${{ runner.temp }}/proofsieve-release/proofsieve-*.tar.gz
+            ${{ runner.temp }}/proofsieve-release/SHA256SUMS
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
