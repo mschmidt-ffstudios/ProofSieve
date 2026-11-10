@@ -4,6 +4,19 @@
 
 ProofSieve evaluates ODRL or SHACL rules at configurable endpoints. It verifies signed credentials and documents against configured trust settings and supports wallet presentations through EUDI and Credo verifier adapters. It can record decisions, export signed evidence and report forwarding outcomes. The workspace includes Guard, Credential Builder, Verification Lab and Swagger UI in German and English.
 
+## ProofSieve in action
+
+**Guard** evaluates a saved policy, shows the server's decision, and offers the signed evidence for download.
+
+[![ProofSieve Guard showing a policy denial and the signed evidence download](docs/images/guard-denied.png)](docs/images/guard-denied.png)
+
+| Credential Builder | Swagger UI |
+| --- | --- |
+| [![Credential Builder with a synthetic JSON input and API request preview](docs/images/builder-handoff.png)](docs/images/builder-handoff.png) | [![Swagger UI showing the signed evidence response and download button](docs/images/swagger-evidence.png)](docs/images/swagger-evidence.png) |
+| Prepare a test input and open it in Guard. | Inspect and download signed evidence for the same decision. |
+
+[Follow the example in the user guide](docs/MANUAL.md).
+
 ## Current limits for company deployments
 
 - **Document size.** Document verification accepts up to 64 KiB of raw document bytes. The complete HTTP request, including Base64 encoding and any detached proofs, is limited to 96 KiB. [Document verification](docs/DOCUMENT-CHECKS.md)
