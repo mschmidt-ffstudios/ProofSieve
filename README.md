@@ -6,16 +6,36 @@ ProofSieve evaluates ODRL or SHACL rules at configurable endpoints. It verifies 
 
 ## ProofSieve in action
 
-**Guard** evaluates a saved policy, shows the server's decision, and offers the signed evidence for download.
+### Build an ODRL policy and set its result URLs
 
-[![ProofSieve Guard showing a policy denial and the signed evidence download](docs/images/guard-denied.png)](docs/images/guard-denied.png)
+[![Guard editing a nested ODRL rule with Return URL, Fail URL, and the server response](docs/images/guard-policy-urls.png)](docs/images/guard-policy-urls.png)
 
-| Credential Builder | Swagger UI |
+1. In **Guard**, select **Load nested example** to create a draft for `/verify/odrl-graph`.
+2. Select the `role = "reviewer"` node in the nested **AND** group. Change **Expected value (JSON)** to `"auditor"` and select **Apply condition**. The rule now requires an active status and either an admin role or an auditor role with MFA.
+3. Set **Response mode** to **Return a URL as JSON**. Enter `https://portal.example/continue` in **Return URL** and `https://portal.example/refused` in **Fail URL**. Select **Save rule**.
+4. Under **Input to verify**, paste `{"status":"active","role":"auditor","mfa":true}` and select **Verify on server**. Repeat with `"mfa":false`.
+
+| Auditor input | Server response |
 | --- | --- |
-| [![Credential Builder with a synthetic JSON input and API request preview](docs/images/builder-handoff.png)](docs/images/builder-handoff.png) | [![Swagger UI showing the signed evidence response and download button](docs/images/swagger-evidence.png)](docs/images/swagger-evidence.png) |
-| Prepare a test input and open it in Guard. | Inspect and download signed evidence for the same decision. |
+| MFA enabled | HTTP 200 with `{"valid":true,"redirectUrl":"https://portal.example/continue"}` |
+| MFA disabled | HTTP 200 with `{"valid":false,"redirectUrl":"https://portal.example/refused"}` |
 
-[Follow the example in the user guide](docs/MANUAL.md).
+The calling application receives the selected URL in JSON. To change the asset IRI shown at the root of the graph, open **View and edit ODRL JSON-LD** and edit `permission[0].target`. The result URLs are separate endpoint settings.
+
+### Set a verifier URL in the Verification Lab
+
+In **Two of three signatures**, select **Ben**, choose **External verifier**, and enter the **Verifier URL**. The Lab simulates the check. For a live document check, register the HTTPS destination in the operator's connector registry and reference its ID in the verification profile. [Connector configuration](docs/DOCUMENT-CHECKS.md#configure-connectors-as-an-operator)
+
+[![Verification Lab signer editor with an external verifier URL](docs/images/lab-verifier-url.png)](docs/images/lab-verifier-url.png)
+
+### Verify a request and export signed evidence
+
+| Credential Builder | Guard | Swagger UI |
+| --- | --- | --- |
+| [![Credential Builder with a synthetic JSON input and API request preview](docs/images/builder-handoff.png)](docs/images/builder-handoff.png) | [![Guard showing a policy denial and signed evidence download](docs/images/guard-denied.png)](docs/images/guard-denied.png) | [![Swagger UI showing the signed evidence response and download button](docs/images/swagger-evidence.png)](docs/images/swagger-evidence.png) |
+| Prepare a test input and open it in Guard. | Verify the input with a saved decision rule. | Inspect and download signed evidence for the same decision. |
+
+[Follow the decision and evidence example in the user guide](docs/MANUAL.md).
 
 ## Current limits for company deployments
 
