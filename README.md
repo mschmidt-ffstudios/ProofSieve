@@ -22,9 +22,50 @@ ProofSieve evaluates ODRL or SHACL rules at configurable endpoints. It verifies 
 
 The calling application receives the selected URL in JSON. To change the asset IRI shown at the root of the graph, open **View and edit ODRL JSON-LD** and edit `permission[0].target`. The result URLs are separate endpoint settings.
 
+### Verify a signed document with a live external service
+
+This example runs an actual DSS HTTPS bridge and verifies a detached CAdES signature against a disposable test CA. From the checkout, use the [local Python environment](#run-locally-from-a-checkout), Maven, and JDK 25.
+
+```sh
+.venv/bin/python examples/acceptance/dss/guard_demo.py --java-home "$JAVA_HOME"
+```
+
+The demo prints the Guard URL and the private folder containing the configuration and test inputs. The operator enters the verifier's HTTPS URL in `connectors.dss-demo.url` in `checks.json`. Guard loads that file through `--checks-config`. This run used port `50680`. The demo generates the actual port and TLS CA path for each run.
+
+```json
+{
+  "version": 1,
+  "connectors": {
+    "dss-demo": {
+      "kind": "dss",
+      "url": "https://127.0.0.1:50680/validate",
+      "allowedNetworks": ["127.0.0.1/32"],
+      "caFile": "/absolute/path/to/tls-trust.pem",
+      "bearerEnv": "PROOFSIEVE_ACCEPTANCE_DSS_TOKEN",
+      "profileVersion": "dss-6.5.1-demo"
+    }
+  }
+}
+```
+
+1. Open the printed Guard URL and sign in using the token in `admin.token`. Create `/verify/dss-order` and choose **ODRL · JSON-LD** and **Decision · auditable operation**.
+2. Open **Document signature profile** and paste `verification-profile.json`. The signer entry pins the test certificate and sets `"kind": "dss"`, `"format": "cades-detached"`, and `"connector": "dss-demo"`. The connector ID resolves to the URL above.
+3. In the ODRL graph, edit the condition to **Field** `validSignerCount`, **Comparison** `≥ is at least`, **Expected value (JSON)** `1`. Select **Apply condition** and **Save rule**. The verification profile selects the service and the ODRL rule evaluates the verified signer count.
+
+[![Guard rule with connector dss-demo and an ODRL condition requiring one verified signer](docs/images/guard-dss-profile.png)](docs/images/guard-dss-profile.png)
+
+Load `original.json` or `modified.json` in **Input to verify**, enter a distinct **Operation reference**, and select **Verify on server** to record each decision. The screenshots show **Test rule → Run now**, which displays the live DSS check and the policy trace when the signature threshold is met.
+
+| Original order | Modified order with the same signature |
+| --- | --- |
+| [![Guard allows the original order after DSS verifies the signature and the ODRL condition matches](docs/images/guard-dss-allow.png)](docs/images/guard-dss-allow.png) | [![Guard denies the modified order after DSS rejects the signature](docs/images/guard-dss-deny.png)](docs/images/guard-dss-deny.png) |
+| HTTP 200 · `allow` · `policy_allowed` | HTTP 200 · `deny` · `check_failed` |
+
+Press Enter in the demo terminal to stop both services and remove the temporary files. [Connector configuration and bridge contract](docs/DOCUMENT-CHECKS.md#configure-connectors-as-an-operator)
+
 ### Set a verifier URL in the Verification Lab
 
-In **Two of three signatures**, select **Ben**, choose **External verifier**, and enter the **Verifier URL**. The Lab simulates the check. For a live document check, register the HTTPS destination in the operator's connector registry and reference its ID in the verification profile. [Connector configuration](docs/DOCUMENT-CHECKS.md#configure-connectors-as-an-operator)
+In **Two of three signatures**, select **Ben**, choose **External verifier**, and enter the **Verifier URL**. The Lab simulates this check using example results.
 
 [![Verification Lab signer editor with an external verifier URL](docs/images/lab-verifier-url.png)](docs/images/lab-verifier-url.png)
 
